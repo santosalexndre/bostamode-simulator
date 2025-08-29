@@ -31,6 +31,9 @@ export class Index extends Engine {
         Animations.load('player/divedown', playerPng, [6, 7], _animFPS, true);
         Animations.load('player/dive', playerPng, [1, 0], _animFPS, true);
 
+        // const boymoder = SpriteSheets.load()
+        // Animations.load('girl/idle', )
+
         Animations.load('pauseMenu', SpriteSheets.load('images/pause.png', 1, 1), [0], 1, true);
 
         const fish = SpriteSheets.load('images/fish1.png', 1, 1);
@@ -39,6 +42,6 @@ export class Index extends Engine {
         const tipArrow = SpriteSheets.load('images/tip_arrow.png', 16, 16);
         Animations.load('tip_arrow', tipArrow, [1], 1, true);
 
-        this.init(new Game(MenuState, 320, 240));
+        this.init(new Game(MenuState, 480, 360));
     }
 }

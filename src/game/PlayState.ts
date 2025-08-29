@@ -53,7 +53,8 @@ export class PlayState extends State {
     private particles: Group = new Group();
 
     public override enter(): void {
-        // const p = new Player(100, 100);
+        const p = new Player(100, 200);
+        p.position.y = main.height - p.height;
         // p.timer.every(0.5, () => {
         //     this.particles.add(new Emitter(p.position.x, p.position.y));
         // });
@@ -71,22 +72,22 @@ export class PlayState extends State {
         this.main.update(dt);
         this.particles.update(dt);
 
-        if (input.down('fire1')) {
-            const emitter = new Emitter(main.mouse.x, main.mouse.y);
-            this.main.add(emitter);
+        // if (input.down('fire1')) {
+        //     const emitter = new Emitter(main.mouse.x, main.mouse.y);
+        //     this.main.add(emitter);
 
-            for (let i = 0; i < 1; i++) {
-                const p = new Bullet(main.mouse.x, main.mouse.y);
-                // p.velocity = vec.randomDirection(50, 100);
-                p.rotation = love.math.random() * 360;
-                this.main.add(p);
-            }
-        }
+        //     for (let i = 0; i < 1; i++) {
+        //         const p = new Bullet(main.mouse.x, main.mouse.y);
+        //         // p.velocity = vec.randomDirection(50, 100);
+        //         p.rotation = love.math.random() * 360;
+        //         this.main.add(p);
+        //     }
+        // }
 
-        if (input.down('left')) main.camera.move(-1000 * dt, 0);
-        if (input.down('right')) main.camera.move(1000 * dt, 0);
-        if (input.down('up')) main.camera.move(0, -1000 * dt);
-        if (input.down('down')) main.camera.move(0, 1000 * dt);
+        // if (input.down('left')) main.camera.move(-1000 * dt, 0);
+        // if (input.down('right')) main.camera.move(1000 * dt, 0);
+        // if (input.down('up')) main.camera.move(0, -1000 * dt);
+        // if (input.down('down')) main.camera.move(0, 1000 * dt);
     }
 
     public override render(): void {

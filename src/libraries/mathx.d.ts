@@ -1,4 +1,5 @@
 /** Extra mathematical functions wrapper */
+/** @noSelfInFile */
 /** Wrap value around range [lo, hi) */
 /** @customName wrap */
 export function wrap(v: number, lo: number, hi: number): number;
@@ -86,7 +87,7 @@ export function angleDifference(a: number, b: number): number;
 
 /** Lerp for angles */
 /** @customName lerp_angle */
-export function lerpAngle(a: number, b: number, t: number): number;
+export function lerp_angle(a: number, b: number, t: number): number;
 
 /** Lerp for angles with epsilon */
 /** @customName lerp_angle_eps */
