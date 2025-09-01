@@ -3,26 +3,30 @@ import { main } from '../bliss/Main';
 import { State } from '../bliss/State';
 import { Player } from './Player';
 import { Dialogue } from './Dialogue';
+import { Prop } from './Prop';
+import { input } from '../bliss/Input';
+import { Npc } from './Npc';
+import { StealthMeme } from './StealthMeme';
+import { Scene } from './Scene';
+import { SceneManager } from './SceneManager';
 
 export class PlayState extends State {
-    private main: Group = new Group();
-    private particles: Group = new Group();
+    public main: Group = new Group();
+    public ui: Group = new Group();
+    public particles: Group = new Group();
+    public props: Group<Prop> = new Group();
+    public currentScene?: Scene;
 
     public override enter(): void {
-        const p = new Player(100, 200);
-        p.position.y = main.height - p.height;
-        // p.timer.every(0.5, () => {
-        //     this.particles.add(new Emitter(p.position.x, p.position.y));
+        // this.currentScene = new Scene('assets/data/scenes/bedroom1.json');
+        // this.currentScene.switchRequest.connect(newScene => {
+        //     this.currentScene = new Scene(`assets/data/scenes/${newScene}.json`);
         // });
-        this.main.add(p);
-
-        this.main.add(new Dialogue());
     }
 
     public override update(dt: number): void {
-        super.update(dt);
         this.main.update(dt);
-        this.particles.update(dt);
+        SceneManager.currentScene?.update(dt);
     }
 
     public override render(): void {
@@ -32,9 +36,12 @@ export class PlayState extends State {
             main.camera.attach();
 
             this.main.render();
+            SceneManager.currentScene?.render();
             this.particles.render();
+            this.props.render();
 
             main.camera.detach();
+            this.ui.render();
         });
     }
 }

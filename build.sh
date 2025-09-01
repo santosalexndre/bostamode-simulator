@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+BUILD_DIR="build"
+
 echo "cleaning build dir..."
 rm -rf build
 mkdir build
@@ -29,7 +31,7 @@ popd > /dev/null
 
 cp -r "$OUTDIR/makelove-build" ./dist
 
-if [[ "${1:-}" == "--test" ]]; then
+
     ZIPFILE=$(find ./dist/makelove-build/lovejs -name "*.zip" | head -n1)
 
     if [ -z "$ZIPFILE" ]; then
@@ -74,6 +76,8 @@ if [[ "${1:-}" == "--test" ]]; then
     sed -i 's/width="800"/width="960"/' "$HTML_FILE"
     sed -i 's/height="600"/height="720"/' "$HTML_FILE"
 
+    # sed -i 's/drawLoadingText(text);/drawLoadingText(Module.remainingDependencies / Module.totalDependencies);/' "$HTML_FILE"
+
     # Remove old drawLoadingText (lines containing function drawLoadingText until next closing })
     awk 'BEGIN{skip=0} 
         /function drawLoadingText\(/ {skip=1} 
@@ -86,6 +90,11 @@ if [[ "${1:-}" == "--test" ]]; then
         skip && /\}/ {skip=0; next} 
         !skip {print}' "$HTML_FILE" > "$HTML_FILE.tmp" && mv "$HTML_FILE.tmp" "$HTML_FILE"
 
+    perl -0777 -i -pe 's|setStatus: function\([^)]*\)\s*\{[^}]+\}|setStatus: function(text) {
+    if (text) {
+        drawLoadingText(Module.remainingDependencies / Module.totalDependencies);
+    }
+    |s' "$HTML_FILE"
 
     # Append new functions at the end of the script block (before </script>)
     perl -0777 -i -pe 's|(</script>)|function drawLoadingText(progress) {
@@ -98,8 +107,8 @@ if [[ "${1:-}" == "--test" ]]; then
         ctx.fillStyle = "white";
         ctx.font = "24px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("Powered by LoveJS", canvas.width/2, canvas.height/2-50);
-        ctx.fillText("Made by Davidobot", canvas.width/2, canvas.height/2-20);
+        // ctx.fillText("Powered by LoveJS", canvas.width/2, canvas.height/2-50);
+        // ctx.fillText("Made by Davidobot", canvas.width/2, canvas.height/2-20);
 
         var barWidth = canvas.width*0.9;
         var barHeight = 5;
@@ -113,7 +122,7 @@ if [[ "${1:-}" == "--test" ]]; then
         ctx.fillStyle = "grey";
         ctx.fillRect(barX, barY, filledWidth, barHeight);
 
-        ctx.strokeStyle = "#222222";
+        ctx.strokeStyle = "black";
         ctx.lineWidth = 2;
         ctx.strokeRect(barX, barY, barWidth, barHeight);
 
@@ -122,11 +131,12 @@ if [[ "${1:-}" == "--test" ]]; then
         this.remainingDependencies = left;
         this.totalDependencies = Math.max(this.totalDependencies,left);
         var progress = this.totalDependencies>0? 1-left/this.totalDependencies : 0;
-        drawLoadingText(progress);
+        // drawLoadingText(progress);
     };
     $1|' "$HTML_FILE"
  
 
+if [[ "${1:-}" == "--test" ]]; then
     # Start Python HTTP server
     echo "starting web server at http://localhost:8000 ..."
     pushd "$GAME_FOLDER" > /dev/null
@@ -137,13 +147,13 @@ if [[ "${1:-}" == "--test" ]]; then
     trap "echo 'Stopping server...'; kill $SERVER_PID; exit 1" SIGINT SIGTERM
 
     # Open default browser
-    if command -v xdg-open &> /dev/null; then
-        xdg-open "http://localhost:8000"
-    elif command -v open &> /dev/null; then
-        open "http://localhost:8000"
-    else
-        echo "⚠️ Could not detect a browser opener. Open http://localhost:8000 manually."
-    fi
+    # if command -v xdg-open &> /dev/null; then
+    #     xdg-open "http://localhost:8000"
+    # elif command -v open &> /dev/null; then
+    #     open "http://localhost:8000"
+    # else
+    #     echo "⚠️ Could not detect a browser opener. Open http://localhost:8000 manually."
+    # fi
 
     # Wait for user to quit
     wait $SERVER_PID

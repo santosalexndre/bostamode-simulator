@@ -21,6 +21,7 @@ export class UiElement extends Basic {
     public onHover: Signal<void> = new Signal();
     public onLeave: Signal<void> = new Signal();
     public onClick: Signal<void> = new Signal();
+    public onClickReleased: Signal<void> = new Signal();
 
     public overlaps(x: number, y: number, w: number, h: number): boolean {
         // this rect

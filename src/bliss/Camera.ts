@@ -42,9 +42,14 @@ class Shake {
         this.duration = duration;
         this.frequency = frequency;
         this.samples = [];
-        this.startTime = 0;
+        this.startTime = love.timer.getTime() * 1000;
         this.t = 0;
-        this.shaking = false;
+        this.shaking = true;
+
+        const sample_count = (duration / 1000) * frequency;
+        for (const i of $range(1, sample_count)) {
+            this.samples.push(2 * love.math.random() - 1);
+        }
     }
 
     update(dt: number) {
@@ -201,7 +206,7 @@ export class Camera extends Basic {
 
     public attach(): void {
         push();
-        translate(this.width / 2, this.height / 2);
+        translate(this.width / 2 + this.offsetX, this.height / 2 + this.offsetY);
         scale(this.scale);
         rotate(this.rotation);
         translate((-this.x + this.offsetX) * this.scrollFactorX, (-this.y + this.offsetY) * this.scrollFactorY);

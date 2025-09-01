@@ -8,7 +8,9 @@ export class Engine {
     constructor() {
         love.graphics.setDefaultFilter('nearest', 'nearest');
         love.graphics.setLineStyle('rough');
-        love.graphics.setFont(love.graphics.newFont('assets/fonts/PixelOperator.ttf', 16));
+        const defaultFont = love.graphics.newFont('assets/fonts/PixelOperator.ttf', 16);
+        defaultFont.setFilter('nearest');
+        love.graphics.setFont(defaultFont);
 
         love.update = dt => {
             input.update();
@@ -19,7 +21,7 @@ export class Engine {
         };
 
         love.keypressed = (key, scancode, isrepeat) => {
-            if (love.keyboard.isDown('lalt') && key === 'return') {
+            if ((love.keyboard.isDown('lalt') && key === 'return') || key == 'f') {
                 love.window.setFullscreen(!love.window.getFullscreen()[0]);
             }
         };

@@ -10,7 +10,7 @@ export class Images {
         if (cache !== undefined) {
             return cache;
         } else {
-            const img = love.graphics.newImage(`assets/${path}`);
+            const img = love.graphics.newImage(`${path}`);
             Images.cache.set(path, img);
             return img;
         }

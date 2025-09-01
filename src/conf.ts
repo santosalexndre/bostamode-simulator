@@ -4,22 +4,19 @@ import { Config } from 'love';
 const args: string[] = arg;
 
 const IS_DEBUG = os.getenv('LOCAL_LUA_DEBUGGER_VSCODE') === '1' && args[1] === 'debug';
-if (IS_DEBUG)
-{
+if (IS_DEBUG) {
     require('lldebugger').start();
 
-    love.errorhandler = (msg: string) =>
-    {
+    love.errorhandler = (msg: string) => {
         error(msg, 2);
     };
 }
 
-love.conf = (t: Config) =>
-{
-    t.identity = 'Flixel';
+love.conf = (t: Config) => {
+    t.identity = 'Boymoder Chronicles';
 
-    t.window.width = 960;
-    t.window.height = 720;
+    t.window.width = 1440;
+    t.window.height = 810;
     t.window.resizable = true;
-    t.window.title = 'LÖVE FLX';
+    t.window.title = 'Boymoder Chronicles';
 };

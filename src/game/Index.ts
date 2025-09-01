@@ -1,6 +1,7 @@
 import { Engine } from '../bliss/Engine';
 import { Game } from '../bliss/Game';
 import { Fonts, SpriteSheets, Animations } from '../bliss/util/Resources';
+import { ViewportMode } from '../bliss/Viewport';
 import { MenuState } from './MenuState';
 import { PlayState } from './PlayState';
 
@@ -20,28 +21,15 @@ export class Index extends Engine {
         //         '$', // row 5 (other))
         // );
 
-        const _animFPS = 3;
-        const playerPng = SpriteSheets.load('images/player.png', 16, 17);
         // TODO: create an animation mapping mechanicsm for each sprite instead of ding things globally here
-        Animations.load('player/idle', playerPng, [0], _animFPS, true);
-        Animations.load('player/hurt', playerPng, [2], _animFPS, false);
-        Animations.load('player/aim', playerPng, [3], _animFPS, false);
-        Animations.load('player/yay', playerPng, [4], _animFPS, false);
-        Animations.load('player/pickup', playerPng, [5], _animFPS, false);
-        Animations.load('player/divedown', playerPng, [6, 7], _animFPS, true);
-        Animations.load('player/dive', playerPng, [1, 0], _animFPS, true);
 
         // const boymoder = SpriteSheets.load()
         // Animations.load('girl/idle', )
 
-        Animations.load('pauseMenu', SpriteSheets.load('images/pause.png', 1, 1), [0], 1, true);
+        const girlPng = SpriteSheets.load('assets/images/player/player.png', 90, 200);
+        Animations.load('girl/idle', girlPng, [0], 3, true);
+        Animations.load('girl/hide', girlPng, [1], 3, true);
 
-        const fish = SpriteSheets.load('images/fish1.png', 1, 1);
-        Animations.load('player/fish1', fish, [0], 1, true);
-
-        const tipArrow = SpriteSheets.load('images/tip_arrow.png', 16, 16);
-        Animations.load('tip_arrow', tipArrow, [1], 1, true);
-
-        this.init(new Game(MenuState, 480, 360));
+        this.init(new Game(MenuState, 480, 270, ViewportMode.Viewport));
     }
 }

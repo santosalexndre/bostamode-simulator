@@ -1,0 +1,27 @@
+{
+    "id": "ryanGosling",
+    "background": "assets/images/ryanscene.png",
+    "effects": [
+        {
+            "shake": [
+                1.5,
+                3,
+                20,
+                "y"
+            ]
+        }
+    ],
+    "music": "assets/music/ryan.mp3",
+    "start": [
+        {
+            "id": "start01",
+            "speaker": "Ryan",
+            "type": "lines",
+            "content": [
+                "yeah its me ryan gosling",
+                "i dont usually do uber drives but you get a pass",
+                "i know its dangerous for a lady like you to be walking alone like this"
+            ]
+        }
+    ]
+}

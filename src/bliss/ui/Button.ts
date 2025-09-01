@@ -51,25 +51,26 @@ export class Button extends UiElement {
                 this.hovered = true;
                 this.onHover.emit();
             }
+            if (input.pressed('fire1')) {
+                this.onClick.emit();
+            }
+            if (input.released('fire1')) {
+                this.onClickReleased.emit();
+            }
         } else {
             if (this.hovered) this.onLeave.emit();
             this.hovered = false;
-        }
-        if (this.hovered && input.pressed('fire1')) {
-            this.onClick.emit();
         }
     }
 
     override render(): void {
         setColor(this.backgroundColor);
-        push();
-        translate(-this.width * this.anchorX, -this.height * this.anchorY);
         rectangle('fill', this.x, this.y, this.width, this.height);
         setColor(1, 1, 1);
         this.label.render();
         setColor(1, 0, 0);
-        // rectangle('line', this.left, this.top, this.right - this.left, this.bottom - this.top);
-        pop();
-        // circle('fill', this.x, this.y, 2);
+        rectangle('line', this.left, this.top, this.right - this.left, this.bottom - this.top);
+        // pop();
+        circle('fill', this.x, this.y, 2);
     }
 }

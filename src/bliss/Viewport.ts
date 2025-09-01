@@ -100,6 +100,7 @@ export class Viewport {
             clear(this.bgColor);
             fn();
             setScissor();
+            setColor(1, 1, 1);
             pop();
         }
     }
