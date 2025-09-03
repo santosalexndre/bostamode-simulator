@@ -9,7 +9,7 @@ export class Clickable extends Basic {
     onMouseEnter: Signal = new Signal();
     onMouseLeave: Signal = new Signal();
 
-    private hovered: boolean = false;
+    public hovered: boolean = false;
 
     constructor(
         public x: number,

@@ -6,10 +6,10 @@ export class Engine {
     private static game: any;
 
     constructor() {
-        love.graphics.setDefaultFilter('nearest', 'nearest');
+        love.graphics.setDefaultFilter('linear', 'linear');
         love.graphics.setLineStyle('rough');
-        const defaultFont = love.graphics.newFont('assets/fonts/PixelOperator.ttf', 16);
-        defaultFont.setFilter('nearest');
+        const defaultFont = love.graphics.newFont('assets/fonts/comicneue.ttf', 36);
+        defaultFont.setFilter('linear');
         love.graphics.setFont(defaultFont);
 
         love.update = dt => {

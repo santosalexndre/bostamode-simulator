@@ -30,6 +30,6 @@ export class Index extends Engine {
         Animations.load('girl/idle', girlPng, [0], 3, true);
         Animations.load('girl/hide', girlPng, [1], 3, true);
 
-        this.init(new Game(MenuState, 480, 270, ViewportMode.Viewport));
+        this.init(new Game(MenuState, 1920, 1080, ViewportMode.Viewport));
     }
 }

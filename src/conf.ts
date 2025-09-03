@@ -15,8 +15,8 @@ if (IS_DEBUG) {
 love.conf = (t: Config) => {
     t.identity = 'Boymoder Chronicles';
 
-    t.window.width = 1440;
-    t.window.height = 810;
+    t.window.width = 1280;
+    t.window.height = 720;
     t.window.resizable = true;
     t.window.title = 'Boymoder Chronicles';
 };

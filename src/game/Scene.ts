@@ -1,4 +1,4 @@
-import { circle, draw, Image, newImage, pop, push, rectangle } from 'love.graphics';
+import { circle, draw, Image, newImage, pop, push, rectangle, Shader } from 'love.graphics';
 import { Group } from '../bliss/group/Group';
 import { main } from '../bliss/Main';
 import { Images } from '../bliss/util/Resources';
@@ -15,64 +15,8 @@ import * as Timer from '../libraries/timer';
 import { handleEffects } from './util';
 import { ClickableObject } from './ui/ClickableObject';
 import { MusicManager } from './MusicManager';
-
-export class SceneObject extends UiElement {
-    sprite: Image;
-    public sx: number = 1;
-    public sy: number = 1;
-    public spring: Spring = new Spring();
-
-    constructor(x: number, y: number) {
-        super();
-        this.x = x;
-        this.y = y;
-
-        this.onHover.connect(() => {
-            this.timer.tween(0.3, this, { sx: 1.1, sy: 1.1 }, 'out-cubic');
-            this.spring.pull(5);
-        });
-
-        this.onLeave.connect(() => {
-            this.timer.tween(0.3, this, { sx: 1.0, sy: 1.0 }, 'out-cubic');
-        });
-    }
-
-    override update(dt: number): void {
-        super.update(dt);
-        this.timer.update(dt);
-        this.spring.update(dt);
-        const width = this.right - this.left;
-        const height = this.bottom - this.top;
-
-        if (this.overlaps(main.mouse.x + width / 2, main.mouse.y + height / 2, 2, 2)) {
-            if (!this.hovered) {
-                this.onHover.emit();
-            }
-            if (input.pressed('fire1')) {
-                this.onClick.emit();
-            }
-            if (input.released('fire1')) {
-                this.onClickReleased.emit();
-            }
-            this.hovered = true;
-        } else {
-            if (this.hovered) {
-                this.onLeave.emit();
-                this.hovered = false;
-            }
-        }
-    }
-
-    override render(): void {
-        super.render();
-        const width = this.right - this.left;
-        const height = this.bottom - this.top;
-
-        // rectangle('line', this.left - width / 2, this.top - height / 2, this.right - this.left, this.bottom - this.top);
-        circle('fill', this.x, this.y, 2);
-        love.graphics.draw(this.sprite, this.x, this.y, 0, this.sx + this.spring.value, this.sy + this.spring.value, width / 2, height / 2);
-    }
-}
+import { globalState } from './global';
+import { DialogueManager } from './dialogue/DialogueManager';
 
 export class Scene extends Group implements IScene {
     background: Image;
@@ -85,7 +29,14 @@ export class Scene extends Group implements IScene {
 
     timer: Timer = Timer();
 
-    ui: Group = new Group();
+    dialogueGroup: Group<Dialogue> = new Group();
+    objects: Group<ClickableObject> = new Group();
+
+    playerInDialogue: boolean = false;
+
+    whiteShader: Shader = love.graphics.newShader('assets/shaders/flash.frag');
+
+    manager: DialogueManager;
 
     constructor(path: string) {
         super();
@@ -98,44 +49,54 @@ export class Scene extends Group implements IScene {
 
         this.background = Images.get(data.background);
 
-        if (data.start.length > 0) {
-            this.addDialogue(data.start);
-        }
+        this.manager = new DialogueManager();
 
-        if (data.objects) {
-            for (const obj of data.objects) {
-                const instance = new ClickableObject(obj.sprite, obj.position[0], obj.position[1]);
+        // if (data.objects) {
+        //     for (const obj of data.objects) {
+        //         const instance = new ClickableObject(obj.sprite, obj.position[0], obj.position[1]);
 
-                instance.type = obj.id.startsWith('npc') ? 'npc' : 'object';
-                // instance.left = instance.x + obj.hitbox[0];
-                // instance.top = instance.y + obj.hitbox[1];
-                // instance.right = instance.x + obj.hitbox[2];
-                // instance.bottom = instance.y + obj.hitbox[3];
-                instance.onButtonReleased.connect(() => {
-                    if (instance.type == 'npc') {
-                        instance.visible = false;
-                        instance.active = false;
-                    }
-                    const diag = this.addDialogue(obj.dialogue);
-                    diag?.dialogueClosed.connect(() => {
-                        instance.visible = true;
-                        instance.active = true;
-                    });
-                });
-                this.add(instance);
-            }
-        }
+        //         instance.type = obj.id.startsWith('npc') ? 'npc' : 'object';
+        //         instance.onButtonReleased.connect(() => {
+        //             if (!instance['activated']) return;
 
-        handleEffects(data.effects, this.timer);
+        //             if (instance.type == 'npc') {
+        //                 instance.visible = false;
+        //                 // instance.active = false;
+        //             }
+
+        //             const diag = this.addDialogue(obj.dialogue);
+        //             diag?.dialogueClosed.connect(() => {
+        //                 if (instance.type == 'npc') instance.visible = true;
+        //                 // instance.active = true;
+        //             });
+        //         });
+        //         this.objects.add(instance);
+        //     }
+        // }
+
+        // if (data.start.length > 0) {
+        //     this.addDialogue(data.start);
+        // }
+        // handleEffects(data.effects, this.timer);
     }
 
     addDialogue(data: DialogueEntry[]): Dialogue | undefined {
         if (this.currentDialogue === undefined || this.currentDialogue.dead) {
-            this.currentDialogue = this.ui.add(new Dialogue(data));
+            globalState.set('State: playerInDialogue', true);
+            this.currentDialogue = this.dialogueGroup.add(new Dialogue(data));
             this.currentDialogue.dialogueSwitch.connect(s => {
                 this.switchRequest.emit(s);
             });
             this.currentDialogue.start();
+
+            this.objects.forEach(m => (m.active = false));
+            // Turn off all objects so the player cant click again
+            this.objects.forEach(m => m.deactivate());
+
+            this.currentDialogue.dialogueClosed.connect(() => {
+                this.objects.forEach(m => m.activate());
+                this.objects.forEach(m => (m.active = true));
+            });
             return this.currentDialogue;
         }
     }
@@ -143,7 +104,11 @@ export class Scene extends Group implements IScene {
     public override update(dt: number): void {
         super.update(dt);
         this.timer.update(dt);
-        this.ui.update(dt);
+        this.objects.update(dt);
+        love.graphics.setShader();
+        this.manager.update(dt);
+
+        this.dialogueGroup.update(dt);
     }
 
     public override render(): void {
@@ -151,12 +116,14 @@ export class Scene extends Group implements IScene {
         const [w, h] = this.background.getDimensions();
         const sw = w / main.width;
         const sh = h / main.height;
+        push();
 
         draw(this.background, 0, 0, 0, 1 / sw, 1 / sh);
         super.render();
-        push();
+        this.objects.render();
+        this.manager.render();
         // main.camera.detach();
-        this.ui.render();
+        this.dialogueGroup.render();
         pop();
     }
 }
