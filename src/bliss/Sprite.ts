@@ -1,4 +1,4 @@
-import { draw, Image, pop, push, rectangle, rotate, setColor, translate } from 'love.graphics';
+import { draw, getColor, Image, pop, push, rectangle, rotate, setColor, translate } from 'love.graphics';
 import { Color } from './util/Color';
 import { Images } from './util/Resources';
 import { Entity } from './Entity';
@@ -107,6 +107,8 @@ export class Sprite extends Entity {
             pop();
             setColor(1, 1, 1);
         } else if (this._currentTexture !== undefined) {
+            const [r, g, b, a] = getColor();
+            setColor(r, g, b, this.alpha);
             draw(
                 this._currentTexture,
                 this.position.x,
@@ -117,6 +119,7 @@ export class Sprite extends Entity {
                 this.offsetX + offx,
                 this.offsetY + offy,
             );
+            setColor(r, g, b, a);
         }
     }
 

@@ -7,8 +7,11 @@ import { globalState } from '../global';
 import { DialogueBox } from './DialogueBox';
 import { OptionButton } from '../ui/OptionButton';
 import { main } from '../../bliss/Main';
-import { origin, pop, push, scale, translate } from 'love.graphics';
-import { trace } from '../../libraries/inspect';
+import { draw, origin, points, pop, push, scale, translate } from 'love.graphics';
+import { capitalize, getSprite, spriteMap } from '../theme/theme';
+import vec from '../../libraries/nvec';
+import * as Timer from '../../libraries/timer';
+import { Color } from '../../bliss/util/Color';
 
 export class DialogueManager extends Basic {
     fullScript: DialogueScript;
@@ -25,16 +28,24 @@ export class DialogueManager extends Basic {
     speakerLeftSpr?: Sprite;
     speakerRightSpr?: Sprite;
     answeringQuestion: boolean;
+    finishedScript: boolean = false;
     currentSpeaker: string | undefined;
+
+    timer: Timer = Timer();
 
     constructor() {
         super();
-        this.loadScript('assets/data/gameintro.dsl');
+        this.loadScript('assets/data/dialogues/intro.dsl');
     }
 
     loadScript(filepath: string) {
+        this.finishedScript = false;
         this.fullScript = parseDialogue(filepath);
         this.nextEntry();
+
+        const y = this.dialogueBox!.y;
+        this.dialogueBox!.y = main.height;
+        if (!this.finishedScript) this.timer.tween(0.5, this.dialogueBox, { y: y }, 'out-cubic');
     }
 
     private applyEffects(effects?: DialogueEffect[]) {
@@ -64,36 +75,134 @@ export class DialogueManager extends Basic {
             }
         }
     }
+
     public playEntry(entry: DialogueEntry) {
         this.dialogueBox?.kill();
         this.dialogueBox = new DialogueBox(this.currentEntry.text!);
 
-        this.dialogueBox.speakerLeft = entry.speakers?.left;
-        this.dialogueBox.speakerRight = entry.speakers?.right;
+        this.dialogueBox.setSpeakerLeft(entry.speakers?.left);
+        this.dialogueBox.setSpeakerRight(entry.speakers?.right);
+        this.dialogueBox.setCurrentSpeaker(entry.speakers?.current);
 
-        // if (this.dialogueBox.speakerLeft == 'you') this.dialogueBox.speakerLeft = '(You)';
-
-        this.dialogueBox.currentSpeaker = entry.speakers?.current;
         if (entry.speakers?.current == undefined && entry.speakers?.left) {
-            this.dialogueBox.currentSpeaker = entry.speakers.left;
+            this.dialogueBox.currentSpeaker = capitalize(entry.speakers.left);
         }
 
-        if (entry.speakers?.left !== 'you') {
+        if (entry.speakers?.left?.toLowerCase() !== 'you') {
             this.dialogueBox.speakerLeft = undefined;
-            this.dialogueBox.speakerRight = entry.speakers?.left;
+            this.dialogueBox.setSpeakerRight(entry.speakers!.left!);
         }
-        // this.dialogueBox.currentSpeaker = '(You)';
 
-        this.speakerLeft = this.dialogueBox.speakerLeft;
-        this.speakerRight = this.dialogueBox.speakerLeft;
-        this.currentSpeaker = this.dialogueBox.currentSpeaker;
+        this.setSpeakerLeft(this.dialogueBox.speakerLeft);
+        this.setSpeakerRight(this.dialogueBox.speakerRight);
+
+        // this.speakerRight = this.dialogueBox.speakerRight;
+        // this.currentSpeaker = this.dialogueBox.currentSpeaker;
+        this.setCurrentSpeaker(this.dialogueBox.currentSpeaker);
+
+        // if (this.speakerRight && this.speakerRightSpr == undefined) {
+        //     const spr = new Sprite();
+        //     spr.loadGraphic(getSprite(this.speakerRight));
+        //     spr.anchor(0.5, 1);
+        //     spr.scale.x = -1;
+        //     spr.position = vec(main.width * (0.75 + 0.17), main.height + 100);
+        //     spr.alpha = 0;
+        //     spr.timer.tween(0.7, spr.position, { x: main.width * 0.75 }, 'out-cubic');
+        //     spr.timer.tween(0.5, spr, { alpha: 1 }, 'linear');
+        //     this.speakerRightSpr = spr;
+        // } else if (!this.speakerRight && this.speakerRightSpr !== undefined) {
+        //     const spr = this.speakerRightSpr;
+        //     spr.timer.tween(0.5, spr.position, { x: main.width }, 'out-cubic');
+        //     spr.timer.tween(0.2, spr, { alpha: 0 }, 'linear');
+        // }
 
         this.applyEffects(entry.effects);
     }
 
+    public setCurrentSpeaker(s: string | undefined) {
+        if (s === this.currentSpeaker) return;
+        if (s === this.speakerRight) {
+            if (this.speakerLeftSpr !== undefined) this.speakerLeftSpr!.tint = Color.fromHex('#8d8d8dff');
+            if (this.speakerLeftSpr) this.animateBack(this.speakerLeftSpr, 1);
+            if (this.speakerRightSpr) this.animateBack(this.speakerRightSpr, 1);
+            if (this.speakerRightSpr) this.speakerRightSpr.tint = Color.fromHex('#ffffff');
+        } else if (s === this.speakerLeft) {
+            if (this.speakerRightSpr !== undefined) this.speakerRightSpr!.tint = Color.fromHex('#8d8d8dff');
+            if (this.speakerLeftSpr !== undefined) this.speakerLeftSpr!.tint = Color.fromHex('#ffffff');
+            if (this.speakerRightSpr) this.animateBack(this.speakerRightSpr, -1);
+            if (this.speakerLeftSpr) this.animateBack(this.speakerLeftSpr, -1);
+        }
+        this.currentSpeaker = s;
+    }
+
+    public animateBack(spr: Sprite, dir: number) {
+        this.timer.tween(0.3, spr.position, { x: spr.position.x - 30 * dir }, 'out-cubic');
+    }
+
+    public setSpeakerRight(s: string | undefined) {
+        if (s === undefined) {
+            if (this.speakerRightSpr) this.animateClose(this.speakerRightSpr, main.width);
+            this.speakerRight = undefined;
+            return;
+        }
+        if (this.speakerRight === s) return;
+
+        this.speakerRight = s;
+        const spr = new Sprite();
+        spr.loadGraphic(getSprite(s));
+        spr.anchor(0.5, 1);
+        spr.scale.x = -1;
+        spr.position = vec(main.width * 0.8, main.height + 100);
+        spr.alpha = 0;
+        spr.timer.tween(0.7, spr.position, { x: main.width * 0.75 }, 'out-cubic');
+        spr.timer.tween(0.5, spr, { alpha: 1 }, 'linear');
+        this.speakerRightSpr = spr;
+    }
+
+    public setSpeakerLeft(s: string | undefined) {
+        if (s === undefined) {
+            if (this.speakerLeftSpr) this.animateClose(this.speakerLeftSpr, 0);
+            this.speakerLeft = undefined;
+            return;
+        }
+        if (this.speakerLeft === s) return;
+
+        this.speakerLeft = s;
+        const spr = new Sprite();
+        spr.loadGraphic(getSprite(s));
+        spr.anchor(0.5, 1);
+        spr.position = vec(main.width * 0.17, main.height + 100);
+        spr.alpha = 0;
+        spr.timer.tween(0.7, spr.position, { x: main.width * 0.2 }, 'out-cubic');
+        spr.timer.tween(0.5, spr, { alpha: 1 }, 'linear');
+        this.speakerLeftSpr = spr;
+    }
+
+    public animateClose(spr: Sprite, x: number) {
+        spr.timer.tween(0.5, spr.position, { x: x }, 'out-cubic');
+        spr.timer.tween(0.2, spr, { alpha: 0 }, 'linear');
+    }
+
+    public animateOpen(sprite: Sprite) {}
+
     public stop() {
-        this.dialogueBox?.kill();
-        this.dialogueBox = undefined;
+        this.finishedScript = true;
+        this.closeAnimation();
+    }
+
+    public closeAnimation() {
+        if (this.speakerRightSpr) {
+            this.timer.tween(0.5, this.speakerRightSpr.position, { x: main.width });
+            this.timer.tween(0.2, this.speakerRightSpr, { alpha: 0 });
+        }
+        if (this.speakerLeftSpr) {
+            this.timer.tween(0.5, this.speakerLeftSpr.position, { x: 0 });
+            this.timer.tween(0.2, this.speakerLeftSpr, { alpha: 0 });
+        }
+        this.timer.tween(0.5, this.dialogueBox, { y: main.height + this.dialogueBox!.height + 100, alpha: 0 }, 'out-cubic', () => {
+            this.dialogueBox?.kill();
+            this.dialogueBox = undefined;
+        });
     }
 
     public nextEntry() {
@@ -201,6 +310,7 @@ export class DialogueManager extends Basic {
 
     override update(dt: number): void {
         super.update(dt);
+        this.timer.update(dt);
 
         if (input.pressed('fire1') && this.dialogueBox !== undefined) {
             if (!this.dialogueBox.hasFinished()) {
@@ -208,6 +318,12 @@ export class DialogueManager extends Basic {
             } else if (!this.answeringQuestion) {
                 this.nextEntry();
             }
+        }
+        if (this.speakerRightSpr !== undefined) {
+            this.speakerRightSpr.update(dt);
+        }
+        if (this.speakerLeftSpr !== undefined) {
+            this.speakerLeftSpr.update(dt);
         }
 
         this.buttons.forEach(b => b.update(dt));
@@ -222,6 +338,14 @@ export class DialogueManager extends Basic {
         const [dx, dy] = main.camera.viewport.getScreenOffset();
         translate(dx, dy);
         scale(main.camera.viewport.getScreenScale());
+
+        if (this.speakerRightSpr !== undefined) {
+            this.speakerRightSpr.render();
+        }
+
+        if (this.speakerLeftSpr !== undefined) {
+            this.speakerLeftSpr.render();
+        }
 
         this.buttons.forEach(b => b.render());
         this.dialogueBox?.render();

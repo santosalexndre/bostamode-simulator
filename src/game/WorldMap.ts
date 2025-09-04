@@ -21,7 +21,7 @@ export class WorldMap extends State {
         const location = new ClickableObject('assets/images/dress.png', 100, 100);
         location.onButtonReleased.connect(() => {
             main.switchState(PlayState);
-            SceneManager.switchScene('ryan');
+            SceneManager.switchScene('bedroom1');
         });
         this.main.add(location);
     }

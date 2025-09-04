@@ -1,4 +1,4 @@
-import { setColor } from 'love.graphics';
+import { getColor, setColor } from 'love.graphics';
 
 export class Color {
     private 1: number;
@@ -53,7 +53,8 @@ export class Color {
     }
 
     public apply() {
-        setColor(this[1], this[2], this[3], this[4]);
+        const [r, g, b, a] = getColor();
+        setColor(this[1], this[2], this[3], a);
     }
 
     public clone(): Color {

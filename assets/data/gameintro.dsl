@@ -16,12 +16,13 @@
 
 
 #bro
-(you*, brother): oi caralho
-(you, brother*): bom dia porra
+(you*): oi caralho
+(you, dad*): bom dia porra
 #end
 
 #mom
-(mom): hi my male son who is male
+(you, dad*): Hello my dearest loveliest most masculine son. 
+(you, dad*): how was your masculinity, he/him day today? how did you enjoy being a amle? you look such a gentlemanly and brave man, it's obvious that you love being a strong he/him and masculine, right?
 #end
 
 #clerkQuestion01

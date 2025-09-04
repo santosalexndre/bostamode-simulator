@@ -1,10 +1,10 @@
-import { Image, Font, draw, setColor, setBlendMode, rectangle, setLineWidth, setLineStyle } from 'love.graphics';
+import { Image, Font, draw, setColor, setBlendMode, rectangle, setLineWidth, setLineStyle, getColor } from 'love.graphics';
 import { Basic } from '../../bliss/Basic';
 import { main } from '../../bliss/Main';
 import { Images } from '../../bliss/util/Resources';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
-import { BACKGROUND_COLOR, FOCUSED_COLOR, LINE_WIDTH, OUTLINE_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
+import { BACKGROUND_COLOR, capitalize, FOCUSED_COLOR, LINE_WIDTH, OUTLINE_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
 
 export class DialogueBox extends Basic {
     public timer: Timer = Timer();
@@ -43,6 +43,21 @@ export class DialogueBox extends Basic {
         this.typewriter();
     }
 
+    public setSpeakerLeft(s?: string) {
+        if (s === undefined) return;
+        this.speakerLeft = capitalize(s);
+    }
+
+    public setSpeakerRight(s?: string) {
+        if (s === undefined) return;
+        this.speakerRight = capitalize(s);
+    }
+
+    public setCurrentSpeaker(s?: string) {
+        if (s === undefined) return;
+        this.currentSpeaker = capitalize(s);
+    }
+
     public skip() {
         this.timer.clear();
         this._idx = this.fullText.length;
@@ -70,6 +85,8 @@ export class DialogueBox extends Basic {
         this.timer.update(dt);
     }
 
+    alpha = 0.9;
+
     public override render(): void {
         const padding = 30;
         const marginTop = 0;
@@ -80,8 +97,12 @@ export class DialogueBox extends Basic {
 
         // this.color.apply();
         // draw(this._backgroundImage, this.x, this.y, 0, 1, 1, this.width * this.anchorX, this.height * this.anchorY);
+        setColor(1, 1, 1, this.alpha);
         BACKGROUND_COLOR.apply();
+        // const [r, g, b, a] = getColor();
+        // setColor(r, g, b, this.alpha);
         rectangle('fill', this.x - this.width * this.anchorX, this.y - this.height * this.anchorY, this.width, this.height, 25, 25);
+        setColor(1, 1, 1, 1);
         OUTLINE_COLOR.apply();
         setLineWidth(LINE_WIDTH);
         setLineStyle('smooth');
@@ -89,7 +110,7 @@ export class DialogueBox extends Basic {
         setLineWidth(1);
 
         // Draw each line manually
-        setColor(0, 0, 0);
+        setColor(0, 0, 0, 1);
         let y = this.y - this.height + 10; // starting y
         let remaining = this._idx; // number of chars to draw
 
@@ -102,7 +123,7 @@ export class DialogueBox extends Basic {
             remaining -= line.length;
             y += this.font.getHeight();
         }
-        setColor(1, 1, 1);
+        setColor(1, 1, 1, 1);
 
         //draw character labels
         const labelWidth = 200;
