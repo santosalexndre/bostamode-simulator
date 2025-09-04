@@ -12,6 +12,7 @@ import { capitalize, getSprite, spriteMap } from '../theme/theme';
 import vec from '../../libraries/nvec';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
+import { Signal } from '../../bliss/util/Signal';
 
 export class DialogueManager extends Basic {
     fullScript: DialogueScript;
@@ -31,16 +32,17 @@ export class DialogueManager extends Basic {
     finishedScript: boolean = false;
     currentSpeaker: string | undefined;
 
+    switchScene: Signal<string> = new Signal();
+
     timer: Timer = Timer();
 
     constructor() {
         super();
-        this.loadScript('assets/data/dialogues/intro.dsl');
     }
 
-    loadScript(filepath: string) {
+    loadScript(filename: string) {
         this.finishedScript = false;
-        this.fullScript = parseDialogue(filepath);
+        this.fullScript = parseDialogue(`assets/data/dialogues/${filename}`);
         this.nextEntry();
 
         const y = this.dialogueBox!.y;
@@ -55,16 +57,25 @@ export class DialogueManager extends Basic {
             switch (eff.name) {
                 case 'set': {
                     // Example: "confidence -= 1"
-                    const [varName, op, valueStr] = string.match(eff.args, '(%w+)%s*([%+%-=]+)%s*(%d+)');
-                    const value = tonumber(valueStr) ?? 0;
+                    const [varName, op, valueStr] = string.match(eff.args, '(%w+)%s*([%+%-=]+)%s*("?%w+"?)');
+                    const value = tonumber(valueStr);
 
                     if (op === '-=') {
                         globalState.set(varName, (globalState.get(varName) ?? 0) - value);
                     } else if (op === '+=') {
                         globalState.set(varName, (globalState.get(varName) ?? 0) + value);
                     } else if (op === '=') {
-                        globalState.set(varName, value);
+                        if (valueStr === 'true') {
+                            globalState.set(varName, true);
+                        } else if (valueStr === 'false') {
+                            globalState.set(varName, false);
+                        } else if (value === undefined) {
+                            globalState.set(varName, valueStr);
+                        } else {
+                            globalState.set(varName, value);
+                        }
                     }
+
                     break;
                 }
 
@@ -90,7 +101,15 @@ export class DialogueManager extends Basic {
 
         if (entry.speakers?.left?.toLowerCase() !== 'you') {
             this.dialogueBox.speakerLeft = undefined;
-            this.dialogueBox.setSpeakerRight(entry.speakers!.left!);
+            if (entry.speakers) this.dialogueBox.setSpeakerRight(entry.speakers!.left!);
+        }
+
+        if (entry.speakers === undefined) {
+            this.speakerLeft = undefined;
+            this.speakerRight = undefined;
+            this.dialogueBox.speakerLeft = undefined;
+            this.dialogueBox.speakerRight = undefined;
+            this.dialogueBox.currentSpeaker = undefined;
         }
 
         this.setSpeakerLeft(this.dialogueBox.speakerLeft);
@@ -192,11 +211,11 @@ export class DialogueManager extends Basic {
 
     public closeAnimation() {
         if (this.speakerRightSpr) {
-            this.timer.tween(0.5, this.speakerRightSpr.position, { x: main.width });
+            this.timer.tween(0.5, this.speakerRightSpr.position, { x: main.width }, 'linear', () => (this.speakerRightSpr = undefined));
             this.timer.tween(0.2, this.speakerRightSpr, { alpha: 0 });
         }
         if (this.speakerLeftSpr) {
-            this.timer.tween(0.5, this.speakerLeftSpr.position, { x: 0 });
+            this.timer.tween(0.5, this.speakerLeftSpr.position, { x: 0 }, 'linear', () => (this.speakerLeftSpr = undefined));
             this.timer.tween(0.2, this.speakerLeftSpr, { alpha: 0 });
         }
         this.timer.tween(0.5, this.dialogueBox, { y: main.height + this.dialogueBox!.height + 100, alpha: 0 }, 'out-cubic', () => {
@@ -206,17 +225,24 @@ export class DialogueManager extends Basic {
     }
 
     public nextEntry() {
+        if (this.currentId.startsWith('scene')) {
+            this.switchScene.emit(string.gsub(this.currentId, 'scene_', '')[0]);
+            return;
+        }
+
         const entry = this.fullScript[this.currentId];
         if (!entry) error(`entry with #${this.currentId} not found`);
 
         if (this.currentLine >= this.fullScript[this.currentId].length) {
             if (this.stack.length > 0) {
-                const prev = this.stack.pop();
-                this.currentLine = prev!.line;
-                this.currentId = prev!.id;
-                if (this.currentLine >= this.fullScript[this.currentId].length) {
-                    this.stop();
-                    return;
+                while (this.currentLine >= this.fullScript[this.currentId].length) {
+                    if (this.stack.length <= 0) {
+                        this.stop();
+                        return;
+                    }
+                    const prev = this.stack.pop();
+                    this.currentLine = prev!.line;
+                    this.currentId = prev!.id;
                 }
             } else {
                 this.stop();
@@ -244,7 +270,7 @@ export class DialogueManager extends Basic {
 
         if (this.currentEntry.type === 'pipe') {
             const jump = this.currentEntry.jumpTo;
-            if (jump) {
+            if (jump && jump.default) {
                 const valid = evaluateCondition(this.currentEntry.conditions, globalState);
                 if (valid) {
                     this.stack.push({ id: this.currentId, line: this.currentLine + 1 });
@@ -253,6 +279,12 @@ export class DialogueManager extends Basic {
                     this.nextEntry();
                     return;
                 }
+                this.currentLine++;
+                this.nextEntry();
+                return;
+            }
+            if (this.currentEntry.effects) {
+                this.applyEffects(this.currentEntry.effects);
                 this.currentLine++;
                 this.nextEntry();
                 return;
@@ -290,6 +322,8 @@ export class DialogueManager extends Basic {
             this.playEntry(this.currentEntry);
             return;
         }
+
+        if (this.currentEntry.conditions) print('OI: ', evaluateCondition(this.currentEntry.conditions, globalState));
 
         if (this.currentEntry.conditions && !evaluateCondition(this.currentEntry.conditions, globalState)) {
             this.currentLine++;

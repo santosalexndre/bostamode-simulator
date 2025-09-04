@@ -51,6 +51,12 @@ export class Scene extends Group implements IScene {
 
         this.manager = new DialogueManager();
 
+        if (data.start) this.manager.loadScript(data.start);
+
+        this.manager.switchScene.connect(s => {
+            this.switchRequest.emit(s);
+        });
+
         // if (data.objects) {
         //     for (const obj of data.objects) {
         //         const instance = new ClickableObject(obj.sprite, obj.position[0], obj.position[1]);

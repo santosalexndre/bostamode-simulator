@@ -39,6 +39,8 @@ export const evaluateCondition = (expr: string | undefined, context: GameState):
     const [fn] = love.filesystem.load('condition.lua');
     if (!fn) return false;
 
+    // error('teste');
+
     const [ok, result] = pcall(fn);
     if (!ok) return false;
 

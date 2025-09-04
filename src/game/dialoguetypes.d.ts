@@ -55,7 +55,7 @@ export interface SceneObject {
     hitbox: [number, number, number, number];
     position: [number, number];
     interactable: boolean;
-    dialogue: DialogueEntry[];
+    dialogue: string;
 }
 
 // --- Scene ---
@@ -64,10 +64,10 @@ export interface SceneData {
     background: string;
     effects: Effect[];
     music?: string;
-    start: DialogueEntry[];
-    leave: DialogueEntry[];
+    start: string;
+    leave: string;
     objects: SceneObject[];
-    dialogues?: DialogueEntry[];
+    // dialogues?: DialogueEntry[];
 }
 
 export interface IScene {
