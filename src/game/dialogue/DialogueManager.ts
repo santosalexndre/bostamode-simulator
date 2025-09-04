@@ -61,8 +61,10 @@ export class DialogueManager extends Basic {
                     const value = tonumber(valueStr);
 
                     if (op === '-=') {
+                        if (value === undefined) error('Invalid operator for ' + value);
                         globalState.set(varName, (globalState.get(varName) ?? 0) - value);
                     } else if (op === '+=') {
+                        if (value === undefined) error('Invalid operator for ' + value);
                         globalState.set(varName, (globalState.get(varName) ?? 0) + value);
                     } else if (op === '=') {
                         if (valueStr === 'true') {
