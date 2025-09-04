@@ -20,7 +20,7 @@ export interface DialogueOption {
 }
 
 export interface DialogueEntry {
-    speakers?: { left: string | undefined; right: string | undefined };
+    speakers?: { left?: string | undefined; right?: string | undefined; current: string };
     text?: string;
     options?: DialogueOption[];
     conditions?: DialogueConditions;

@@ -1,9 +1,10 @@
-import { Image, Font, draw, setColor, setBlendMode } from 'love.graphics';
+import { Image, Font, draw, setColor, setBlendMode, rectangle, setLineWidth, setLineStyle } from 'love.graphics';
 import { Basic } from '../../bliss/Basic';
 import { main } from '../../bliss/Main';
 import { Images } from '../../bliss/util/Resources';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
+import { BACKGROUND_COLOR, FOCUSED_COLOR, LINE_WIDTH, OUTLINE_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
 
 export class DialogueBox extends Basic {
     public timer: Timer = Timer();
@@ -22,6 +23,9 @@ export class DialogueBox extends Basic {
     font: Font;
     _text: string = '';
     _idx: number = 0;
+    speakerLeft?: string = 'Player';
+    speakerRight?: string = 'Brother';
+    currentSpeaker?: string = 'Brother';
 
     constructor(text: string) {
         super();
@@ -66,34 +70,73 @@ export class DialogueBox extends Basic {
         this.timer.update(dt);
     }
 
-    // color = Color.fromHex('#bbff94af');
     public override render(): void {
-        const padding = 40;
-        const marginTop = 60;
+        const padding = 30;
+        const marginTop = 0;
         love.graphics.setFont(this.font);
 
         // Use font:getWrap to compute wrapped lines
         const [_, lines] = this.font.getWrap(this.fullText, this.width - padding * 2); // returns array of lines
 
         // this.color.apply();
-        draw(this._backgroundImage, this.x, this.y, 0, 1, 0.75, this.width * this.anchorX, this.height * this.anchorY);
-        // setColor(1, 1, 1);
+        // draw(this._backgroundImage, this.x, this.y, 0, 1, 1, this.width * this.anchorX, this.height * this.anchorY);
+        BACKGROUND_COLOR.apply();
+        rectangle('fill', this.x - this.width * this.anchorX, this.y - this.height * this.anchorY, this.width, this.height, 25, 25);
+        OUTLINE_COLOR.apply();
+        setLineWidth(LINE_WIDTH);
+        setLineStyle('smooth');
+        rectangle('line', this.x - this.width * this.anchorX, this.y - this.height * this.anchorY, this.width, this.height, 25, 25);
+        setLineWidth(1);
 
         // Draw each line manually
         setColor(0, 0, 0);
-        let y = this.y - this.height; // starting y
+        let y = this.y - this.height + 10; // starting y
         let remaining = this._idx; // number of chars to draw
 
         for (const line of lines) {
             if (remaining <= 0) break;
 
             const toDraw = line.substring(0, remaining);
-            love.graphics.print(toDraw, this.x - this.width / 2 + padding, y + padding + marginTop);
+            love.graphics.print(toDraw, this.x - this.width / 2 + padding + 10, y + padding + marginTop);
 
             remaining -= line.length;
             y += this.font.getHeight();
         }
-
         setColor(1, 1, 1);
+
+        //draw character labels
+        const labelWidth = 200;
+        const vMargin = 5;
+        const labelHeight = this.font.getHeight() + vMargin;
+        const spacing = -labelHeight / 2 + 0;
+
+        const xx = this.x - this.width * this.anchorX + 30;
+        const yy = this.y - this.height * this.anchorY - labelHeight - spacing;
+
+        if (this.speakerLeft) {
+            if (this.currentSpeaker == this.speakerLeft) FOCUSED_COLOR.apply();
+            else UNFOCUSED_COLOR.apply();
+            rectangle('fill', xx, yy, labelWidth, labelHeight, 25, 25);
+            OUTLINE_COLOR.apply();
+            setLineWidth(LINE_WIDTH);
+            setLineStyle('smooth');
+            rectangle('line', xx, yy, labelWidth, labelHeight, 25, 25);
+            setLineWidth(1);
+            love.graphics.print(this.speakerLeft, xx + labelWidth / 2 - this.font.getWidth(this.speakerLeft) / 2, yy + 1);
+        }
+
+        if (this.speakerRight) {
+            const rx = this.width + labelWidth / 2 - 30;
+            const ry = this.y - this.height * this.anchorY - labelHeight - spacing;
+            if (this.currentSpeaker == this.speakerRight) FOCUSED_COLOR.apply();
+            else UNFOCUSED_COLOR.apply();
+            rectangle('fill', rx, yy, labelWidth, labelHeight, 25, 25);
+            OUTLINE_COLOR.apply();
+            setLineWidth(LINE_WIDTH);
+            setLineStyle('smooth');
+            rectangle('line', rx, yy, labelWidth, labelHeight, 25, 25);
+            setLineWidth(1);
+            love.graphics.print(this.speakerRight, rx + labelWidth / 2 - this.font.getWidth(this.speakerRight) / 2, yy + 1);
+        }
     }
 }

@@ -77,7 +77,7 @@ export class Scene extends Group implements IScene {
         // if (data.start.length > 0) {
         //     this.addDialogue(data.start);
         // }
-        // handleEffects(data.effects, this.timer);
+        handleEffects(data.effects, this.timer);
     }
 
     addDialogue(data: DialogueEntry[]): Dialogue | undefined {

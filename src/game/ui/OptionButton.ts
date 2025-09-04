@@ -1,25 +1,32 @@
-import { draw, Image } from 'love.graphics';
+import { draw, Image, rectangle, setColor, setLineJoin, setLineStyle, setLineWidth } from 'love.graphics';
 import { Clickable } from './Clickable';
 import { input } from '../../bliss/Input';
 import { Images } from '../../bliss/util/Resources';
 import { Label, OutlineMode } from '../../bliss/ui/Label';
 import vec from '../../libraries/nvec';
 import { Color } from '../../bliss/util/Color';
+import { FOCUSED_COLOR, LINE_WIDTH, SELECTED_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
 
 export class OptionButton extends Clickable {
-    public clicked: Image = Images.get('assets/images/ui/button-clicked.png');
-    public unfocused: Image = Images.get('assets/images/ui/button-unfocused.png');
-    public focused: Image = Images.get('assets/images/ui/button-focused.png');
+    // public clicked: Image = Images.get('assets/images/ui/button-clicked.png');
+    // public unfocused: Image = Images.get('assets/images/ui/button-unfocused.png');
+    // public focused: Image = Images.get('assets/images/ui/button-focused.png');
 
     private _currentImage: Image;
 
     public label: Label;
+    backgroundColor: Color = Color.fromHex('#f5dcf3ff');
+    outlineColor: Color = Color.fromHex('#000000');
+
+    clickedColor: Color = SELECTED_COLOR;
+    unfocusedColor: Color = UNFOCUSED_COLOR;
+    focusedColor: Color = FOCUSED_COLOR;
 
     constructor(text: string, onClick: () => void) {
         super(0, 0, 0, 0);
 
-        this.w = this.clicked.getWidth();
-        this.h = this.clicked.getHeight();
+        this.w = 512;
+        this.h = 60;
 
         this.onButtonReleased.connect(onClick);
         this.label = new Label(text);
@@ -38,13 +45,20 @@ export class OptionButton extends Clickable {
 
         const mousedown = input.down('fire1');
 
-        if (mousedown && this.hovered) this._currentImage = this.clicked;
-        else if (this.hovered) this._currentImage = this.focused;
-        else this._currentImage = this.unfocused;
+        if (mousedown && this.hovered) this.backgroundColor = this.clickedColor;
+        else if (this.hovered) this.backgroundColor = this.focusedColor;
+        else this.backgroundColor = this.unfocusedColor;
     }
 
     public override render(): void {
-        draw(this._currentImage, this.x, this.y, 0, 1, 1, this.w / 2, this.h / 2);
+        this.backgroundColor.apply();
+        rectangle('fill', this.x - this.w / 2, this.y - this.h / 2, this.w, this.h, 25, 25);
+        this.outlineColor.apply();
+        setLineWidth(LINE_WIDTH);
+        setLineStyle('smooth');
+        rectangle('line', this.x - this.w / 2, this.y - this.h / 2, this.w, this.h, 25, 25);
+        setColor(1, 1, 1);
+        // draw(this._currentImage, this.x, this.y, 0, 1, 1, this.w / 2, this.h / 2);
         this.label.render();
     }
 }

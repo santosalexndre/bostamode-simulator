@@ -18,7 +18,7 @@ export class PlayState extends State {
     public currentScene?: Scene;
 
     public override enter(): void {
-        // this.currentScene = new Scene('assets/data/scenes/bedroom1.json');
+        // this.currentScene = new Scene('ryan');
         // this.currentScene.switchRequest.connect(newScene => {
         //     this.currentScene = new Scene(`assets/data/scenes/${newScene}.json`);
         // });

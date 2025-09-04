@@ -7,7 +7,8 @@ import { globalState } from '../global';
 import { DialogueBox } from './DialogueBox';
 import { OptionButton } from '../ui/OptionButton';
 import { main } from '../../bliss/Main';
-import { origin, pop, push } from 'love.graphics';
+import { origin, pop, push, scale, translate } from 'love.graphics';
+import { trace } from '../../libraries/inspect';
 
 export class DialogueManager extends Basic {
     fullScript: DialogueScript;
@@ -19,9 +20,12 @@ export class DialogueManager extends Basic {
     buttons: OptionButton[] = [];
 
     dialogueBox?: DialogueBox;
-    speakerLeft?: Sprite;
-    speakerRight?: Sprite;
+    speakerLeft?: string;
+    speakerRight?: string;
+    speakerLeftSpr?: Sprite;
+    speakerRightSpr?: Sprite;
     answeringQuestion: boolean;
+    currentSpeaker: string | undefined;
 
     constructor() {
         super();
@@ -63,6 +67,26 @@ export class DialogueManager extends Basic {
     public playEntry(entry: DialogueEntry) {
         this.dialogueBox?.kill();
         this.dialogueBox = new DialogueBox(this.currentEntry.text!);
+
+        this.dialogueBox.speakerLeft = entry.speakers?.left;
+        this.dialogueBox.speakerRight = entry.speakers?.right;
+
+        // if (this.dialogueBox.speakerLeft == 'you') this.dialogueBox.speakerLeft = '(You)';
+
+        this.dialogueBox.currentSpeaker = entry.speakers?.current;
+        if (entry.speakers?.current == undefined && entry.speakers?.left) {
+            this.dialogueBox.currentSpeaker = entry.speakers.left;
+        }
+
+        if (entry.speakers?.left !== 'you') {
+            this.dialogueBox.speakerLeft = undefined;
+            this.dialogueBox.speakerRight = entry.speakers?.left;
+        }
+        // this.dialogueBox.currentSpeaker = '(You)';
+
+        this.speakerLeft = this.dialogueBox.speakerLeft;
+        this.speakerRight = this.dialogueBox.speakerLeft;
+        this.currentSpeaker = this.dialogueBox.currentSpeaker;
 
         this.applyEffects(entry.effects);
     }
@@ -125,14 +149,14 @@ export class DialogueManager extends Basic {
                 return;
             }
         } else if (this.currentEntry.type == 'question') {
-            const spacing = 12;
+            const spacing = 20;
             const buttonHeight = 60; // assuming all have the same height
 
             // Count valid options (that pass condition)
             const visibleOptions = this.currentEntry.options?.filter(o => !o.conditions || evaluateCondition(o.conditions, globalState)) ?? [];
 
             const totalHeight = visibleOptions.length * buttonHeight + (visibleOptions.length - 1) * spacing;
-            const startY = (main.height - totalHeight) / 2 - buttonHeight; // top Y of the block
+            const startY = (main.height - totalHeight) / 2 - buttonHeight * 2; // top Y of the block
 
             this.answeringQuestion = true;
 
@@ -192,7 +216,15 @@ export class DialogueManager extends Basic {
 
     override render(): void {
         super.render();
+
+        push();
+        origin();
+        const [dx, dy] = main.camera.viewport.getScreenOffset();
+        translate(dx, dy);
+        scale(main.camera.viewport.getScreenScale());
+
         this.buttons.forEach(b => b.render());
         this.dialogueBox?.render();
+        pop();
     }
 }

@@ -35,7 +35,8 @@ export const evaluateCondition = (expr: string | undefined, context: GameState):
     }
 
     // 3. Build Lua function to evaluate expression
-    const [fn] = load('return ' + luaExpr);
+    const tmpFile = love.filesystem.write('condition.lua', 'return ' + luaExpr);
+    const [fn] = love.filesystem.load('condition.lua');
     if (!fn) return false;
 
     const [ok, result] = pcall(fn);
@@ -120,26 +121,54 @@ const parseText = (s: string | undefined) => {
 
 const parseSpeakers = (s: string | undefined) => {
     if (s === undefined) return;
+
     const [content] = string.match(s, '%((.-)%)');
     if (content === undefined) return;
 
-    // const values = { left: undefined, right: undefined };
-    const values = [];
+    const values: string[] = [];
+    let current: string | undefined;
+
     for (const [v] of string.gmatch(content, '[^,]+')) {
-        const value = v.trim();
+        let value = v.trim();
+        if (value.endsWith('*')) {
+            value = value.slice(0, -1).trim();
+            current = value;
+        }
         if (value !== '') {
             values.push(value);
         }
     }
 
-    if (values.length == 1) {
-        return { left: values[0] };
-    } else if (values.length == 2) {
-        return { left: values[0], right: values[1] };
+    if (values.length === 1) {
+        return { left: values[0], current };
+    } else if (values.length === 2) {
+        return { left: values[0], right: values[1], current };
     } else {
-        return {};
+        return { current };
     }
 };
+// const parseSpeakers = (s: string | undefined) => {
+//     if (s === undefined) return;
+//     const [content] = string.match(s, '%((.-)%)');
+//     if (content === undefined) return;
+
+//     // const values = { left: undefined, right: undefined };
+//     const values = [];
+//     for (const [v] of string.gmatch(content, '[^,]+')) {
+//         const value = v.trim();
+//         if (value !== '') {
+//             values.push(value);
+//         }
+//     }
+
+//     if (values.length == 1) {
+//         return { left: values[0] };
+//     } else if (values.length == 2) {
+//         return { left: values[0], right: values[1] };
+//     } else {
+//         return {};
+//     }
+// };
 
 export const parseConditions = (s: string | undefined) => {
     if (s === undefined) return;
@@ -152,6 +181,8 @@ export const parseConditions = (s: string | undefined) => {
     }
 };
 
+const parseLine = (line: string) => {};
+
 export const parseDialogue = (filePath: string): DialogueScript => {
     const entries: DialogueScript = new LuaTable() as any;
 
@@ -162,72 +193,145 @@ export const parseDialogue = (filePath: string): DialogueScript => {
 
     let entryId = '';
 
+    const addEntry = (entry: any) => {
+        const bucket = entryId !== '' ? (entries[entryId] ??= []) : entries['default'];
+        table.insert(bucket, entry);
+    };
+
+    const handleEnd = () => {
+        entryId = '';
+    };
+
+    const handleSection = (line: string) => {
+        [entryId] = string.gsub(line, '#', '');
+    };
+
+    const handleQuestionStart = (speakers: any, text: string, condition: any, effects: any) => {
+        currentEntry = new LuaTable();
+        currentEntry.speakers = speakers;
+        currentEntry.text = text;
+        currentEntry.type = 'question';
+        currentEntry.options = [];
+        currentEntry.conditions = condition;
+        currentEntry.effects = effects;
+        state = 'question';
+    };
+
+    const handleQuestionEnd = () => {
+        state = 'lines';
+        addEntry(currentEntry);
+    };
+
+    const handleQuestionOption = (buttonText: string, condition: any, go_to: any, effects: any) => {
+        table.insert(currentEntry.options, {
+            text: buttonText,
+            conditions: condition,
+            jumpTo: go_to,
+            effects: effects,
+        });
+    };
+
+    const handleLine = (speakers: any, text: string, condition: any, effects: any, go_to: any) => {
+        currentEntry = new LuaTable();
+        currentEntry.speakers = speakers;
+        currentEntry.text = text;
+        currentEntry.type = text !== undefined ? 'lines' : 'pipe';
+        currentEntry.conditions = condition;
+        currentEntry.effects = effects;
+        currentEntry.jumpTo = go_to;
+        addEntry(currentEntry);
+    };
+
     for (const line of love.filesystem.lines(filePath)) {
-        const go_to = parseGoto(line);
-        const effects = parseEffects(line);
-        const condition = parseConditions(line);
-        const speakers = parseSpeakers(line);
-        const text = parseText(line);
-        const [buttonText] = string.match(line, '%[(.-)%]');
+        const trimmed = line.trim();
 
-        if (line.trim() === '') continue;
-
-        if (line.startsWith('//')) continue;
-
-        if (line.trim() === '#end') {
-            entryId = '';
-            continue;
-        } else if (line.startsWith('#')) {
-            [entryId] = string.gsub(line, '#', '');
-            continue;
-        }
-
-        if (line.startsWith('<question>')) {
-            currentEntry = new LuaTable();
-            currentEntry.speakers = speakers;
-            currentEntry.text = text;
-            currentEntry.type = 'question';
-            currentEntry.options = [];
-            currentEntry.conditions = condition;
-            currentEntry.effects = effects;
-            state = 'question';
-            continue;
-        }
-
-        if (line.startsWith('</question>')) {
-            state = 'lines';
-            if (entryId !== '') {
-                if (!entries[entryId]) entries[entryId] = [];
-                table.insert(entries[entryId], currentEntry);
+        if (trimmed !== '' && !line.startsWith('//')) {
+            if (trimmed === '#end') {
+                handleEnd();
+            } else if (line.startsWith('#')) {
+                handleSection(line);
+                // [entryId] = string.gsub(line, '#', '');
             } else {
-                table.insert(entries['default'], currentEntry);
-            }
-            continue;
-        }
+                const go_to = parseGoto(line);
+                const effects = parseEffects(line);
+                const condition = parseConditions(line);
+                const speakers = parseSpeakers(line);
+                const text = parseText(line);
+                const [buttonText] = string.match(line, '%[(.-)%]');
 
-        if (state === 'question') {
-            table.insert(currentEntry.options, {
-                text: buttonText,
-                conditions: condition,
-                jumpTo: go_to,
-                effects: effects,
-            });
-        } else if (state === 'lines') {
-            currentEntry = new LuaTable();
-            currentEntry.speakers = speakers;
-            currentEntry.text = text;
-            currentEntry.type = text !== undefined ? 'lines' : 'pipe';
-            currentEntry.conditions = condition;
-            currentEntry.effects = effects;
-            currentEntry.jumpTo = go_to;
-            // if (currentEntry.type == 'pipe') error('teste');
-            if (entryId !== '') {
-                if (!entries[entryId]) entries[entryId] = [];
-                table.insert(entries[entryId], currentEntry);
-            } else {
-                table.insert(entries['default'], currentEntry);
+                if (line.startsWith('<question>')) {
+                    handleQuestionStart(speakers, text!, condition, effects);
+                } else if (line.startsWith('</question>')) {
+                    handleQuestionEnd();
+                } else if (state === 'question') {
+                    handleQuestionOption(buttonText, condition, go_to, effects);
+                } else if (state === 'lines') {
+                    handleLine(speakers, text!, condition, effects, go_to);
+                }
             }
         }
+
+        // const go_to = parseGoto(line);
+        // const effects = parseEffects(line);
+        // const condition = parseConditions(line);
+        // const speakers = parseSpeakers(line);
+        // const text = parseText(line);
+        // const [buttonText] = string.match(line, '%[(.-)%]');
+
+        // if (line.trim() === '#end') {
+        //     entryId = '';
+        //     continue;
+        // } else if (line.startsWith('#')) {
+        //     [entryId] = string.gsub(line, '#', '');
+        //     continue;
+        // }
+
+        // if (line.startsWith('<question>')) {
+        //     currentEntry = new LuaTable();
+        //     currentEntry.speakers = speakers;
+        //     currentEntry.text = text;
+        //     currentEntry.type = 'question';
+        //     currentEntry.options = [];
+        //     currentEntry.conditions = condition;
+        //     currentEntry.effects = effects;
+        //     state = 'question';
+        //     continue;
+        // }
+
+        // if (line.startsWith('</question>')) {
+        //     state = 'lines';
+        //     if (entryId !== '') {
+        //         if (!entries[entryId]) entries[entryId] = [];
+        //         table.insert(entries[entryId], currentEntry);
+        //     } else {
+        //         table.insert(entries['default'], currentEntry);
+        //     }
+        //     continue;
+        // }
+
+        // if (state === 'question') {
+        //     table.insert(currentEntry.options, {
+        //         text: buttonText,
+        //         conditions: condition,
+        //         jumpTo: go_to,
+        //         effects: effects,
+        //     });
+        // } else if (state === 'lines') {
+        //     currentEntry = new LuaTable();
+        //     currentEntry.speakers = speakers;
+        //     currentEntry.text = text;
+        //     currentEntry.type = text !== undefined ? 'lines' : 'pipe';
+        //     currentEntry.conditions = condition;
+        //     currentEntry.effects = effects;
+        //     currentEntry.jumpTo = go_to;
+        //     // if (currentEntry.type == 'pipe') error('teste');
+        //     if (entryId !== '') {
+        //         if (!entries[entryId]) entries[entryId] = [];
+        //         table.insert(entries[entryId], currentEntry);
+        //     } else {
+        //         table.insert(entries['default'], currentEntry);
+        //     }
+        // }
     }
 
     return entries;

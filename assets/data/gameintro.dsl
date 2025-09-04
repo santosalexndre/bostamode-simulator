@@ -1,7 +1,7 @@
 // cena 2 muito hard badass
  
 :the thrift shop down the street.
-:it doesn't even have a sign or anything. Just a few manne fd fds fds kfdjsh fhdjf hdsjk fhdjs fhdsjkf hdsjk fhdsjk fhdjskfh djskfh djks fhdjksfh djks fhdjskfh jdskhf djkshf jdkshf dsjkfh jk hiwh un inq iquins in front of an open garage gate.
+:it doesn't even have a sign or anything. Just a few manne fdjf  hdsjk fhdsjk fhdjskfh djskfh djks fhdjksfh djks fhdjskfh jdskhf djkshf jdkshf dsjkfh jk hiwh un inq iquins in front of an open garage gate.
 
 { set confidence -= 1, shake STRONG y } ! confidence == LOW ! (you) : as soon as you feel that cold in your neck you look away and try to think of some other thing.
 
@@ -16,8 +16,8 @@
 
 
 #bro
-(brother): oi caralho
-(you): bom dia porra
+(you*, brother): oi caralho
+(you, brother*): bom dia porra
 #end
 
 #mom
