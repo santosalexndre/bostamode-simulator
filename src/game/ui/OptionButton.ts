@@ -6,6 +6,7 @@ import { Label, OutlineMode } from '../../bliss/ui/Label';
 import vec from '../../libraries/nvec';
 import { Color } from '../../bliss/util/Color';
 import { FOCUSED_COLOR, LINE_WIDTH, SELECTED_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
+import { main } from '../../bliss/Main';
 
 export class OptionButton extends Clickable {
     // public clicked: Image = Images.get('assets/images/ui/button-clicked.png');
@@ -21,8 +22,9 @@ export class OptionButton extends Clickable {
     clickedColor: Color = SELECTED_COLOR;
     unfocusedColor: Color = UNFOCUSED_COLOR;
     focusedColor: Color = FOCUSED_COLOR;
+    wait: boolean = false;
 
-    constructor(text: string, onClick: () => void) {
+    constructor(text: string, onClick: () => void, x: number, y: number) {
         super(0, 0, 0, 0);
 
         this.w = 512;
@@ -32,6 +34,11 @@ export class OptionButton extends Clickable {
         this.label = new Label(text);
         this.label.anchor(0.5, 0.5);
         this.label.setColor(Color.fromHex('#000000'));
+        this.setPosition(x, y);
+
+        if (this.overlaps(main.mouse.x, main.mouse.y, 3, 3)) {
+            this.wait = true;
+        }
     }
 
     public setPosition(x: number, y: number) {
@@ -45,7 +52,9 @@ export class OptionButton extends Clickable {
 
         const mousedown = input.down('fire1');
 
-        if (mousedown && this.hovered) this.backgroundColor = this.clickedColor;
+        if (!this.hovered) this.wait = false;
+
+        if (mousedown && this.hovered && !this.wait) this.backgroundColor = this.clickedColor;
         else if (this.hovered) this.backgroundColor = this.focusedColor;
         else this.backgroundColor = this.unfocusedColor;
     }

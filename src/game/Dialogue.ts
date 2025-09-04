@@ -49,7 +49,7 @@ const parseGoto = (gotoStr: string): BranchChoice[] | null => {
     return choices;
 };
 
-const dialogueSound = newSource('assets/sounds/dialogue.wav', 'static');
+// const dialogueSound = newSource('assets/sounds/dialogue.wav', 'static');
 
 export class Dialogue extends Entity {
     public fullScript: DialogueEntry[] = [];

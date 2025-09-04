@@ -9,6 +9,7 @@ import { Npc } from './Npc';
 import { StealthMeme } from './StealthMeme';
 import { Scene } from './Scene';
 import { SceneManager } from './SceneManager';
+import { PauseMenu } from './states/PauseMenu';
 
 export class PlayState extends State {
     public main: Group = new Group();
@@ -16,6 +17,8 @@ export class PlayState extends State {
     public particles: Group = new Group();
     public props: Group<Prop> = new Group();
     public currentScene?: Scene;
+    public pauseScene?: PauseMenu;
+    public paused: boolean = false;
 
     public override enter(): void {
         // this.currentScene = new Scene('ryan');
@@ -26,7 +29,24 @@ export class PlayState extends State {
 
     public override update(dt: number): void {
         this.main.update(dt);
-        SceneManager.currentScene?.update(dt);
+
+        if (this.paused) {
+            this.pauseScene!.update(dt);
+        } else {
+            SceneManager.currentScene?.update(dt);
+            if (input.pressed('fire2')) this.pause();
+        }
+    }
+
+    public pause() {
+        this.paused = true;
+        this.pauseScene = new PauseMenu();
+        this.pauseScene.enter();
+        this.pauseScene.onClose.connect(() => {
+            this.paused = false;
+            this.pauseScene = undefined;
+            print('OI');
+        });
     }
 
     public override render(): void {
@@ -36,7 +56,11 @@ export class PlayState extends State {
             main.camera.attach();
 
             this.main.render();
-            SceneManager.currentScene?.render();
+            if (this.paused) {
+                this.pauseScene!.render();
+            } else {
+                SceneManager.currentScene?.render();
+            }
             this.particles.render();
             this.props.render();
 

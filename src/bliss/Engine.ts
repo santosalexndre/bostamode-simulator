@@ -7,9 +7,9 @@ export class Engine {
 
     constructor() {
         love.graphics.setDefaultFilter('linear', 'linear');
-        love.graphics.setLineStyle('rough');
+        love.graphics.setLineStyle('smooth');
         const defaultFont = love.graphics.newFont('assets/fonts/comicneue.ttf', 36);
-        defaultFont.setFilter('linear');
+        defaultFont.setFilter('linear', 'linear');
         love.graphics.setFont(defaultFont);
 
         love.update = dt => {

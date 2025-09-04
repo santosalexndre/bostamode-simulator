@@ -13,6 +13,7 @@ import vec from '../../libraries/nvec';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
 import { Signal } from '../../bliss/util/Signal';
+import { trace } from '../../libraries/inspect';
 
 export class DialogueManager extends Basic {
     fullScript: DialogueScript;
@@ -33,6 +34,8 @@ export class DialogueManager extends Basic {
     currentSpeaker: string | undefined;
 
     switchScene: Signal<string> = new Signal();
+    dialogueEnded: Signal<void> = new Signal();
+    dialogueStarted: Signal<void> = new Signal();
 
     timer: Timer = Timer();
 
@@ -41,9 +44,23 @@ export class DialogueManager extends Basic {
     }
 
     loadScript(filename: string) {
+        this.dialogueBox = undefined;
+        this.currentLine = 0;
+        this.currentId = 'default';
+        this.stack = [];
+        this.buttons = [];
+        this.speakerLeft = undefined;
+        this.speakerLeftSpr = undefined;
+        this.speakerRight = undefined;
+        this.speakerRightSpr = undefined;
+        this.currentSpeaker = undefined;
+        this.timer.clear();
+
         this.finishedScript = false;
+
         this.fullScript = parseDialogue(`assets/data/dialogues/${filename}`);
         this.nextEntry();
+        this.dialogueStarted.emit();
 
         const y = this.dialogueBox!.y;
         this.dialogueBox!.y = main.height;
@@ -54,12 +71,12 @@ export class DialogueManager extends Basic {
         if (!effects) return;
 
         for (const eff of effects) {
+            trace(eff);
             switch (eff.name) {
                 case 'set': {
-                    // Example: "confidence -= 1"
+                    // Example: "confidence -=1"
                     const [varName, op, valueStr] = string.match(eff.args, '(%w+)%s*([%+%-=]+)%s*("?%w+"?)');
                     const value = tonumber(valueStr);
-
                     if (op === '-=') {
                         if (value === undefined) error('Invalid operator for ' + value);
                         globalState.set(varName, (globalState.get(varName) ?? 0) - value);
@@ -91,7 +108,7 @@ export class DialogueManager extends Basic {
 
     public playEntry(entry: DialogueEntry) {
         this.dialogueBox?.kill();
-        this.dialogueBox = new DialogueBox(this.currentEntry.text!);
+        this.dialogueBox = new DialogueBox(this.currentEntry.text || 'serjao berranteiro mais conehcido como matador de onça');
 
         this.dialogueBox.setSpeakerLeft(entry.speakers?.left);
         this.dialogueBox.setSpeakerRight(entry.speakers?.right);
@@ -208,6 +225,7 @@ export class DialogueManager extends Basic {
 
     public stop() {
         this.finishedScript = true;
+        this.dialogueEnded.emit();
         this.closeAnimation();
     }
 
@@ -220,15 +238,22 @@ export class DialogueManager extends Basic {
             this.timer.tween(0.5, this.speakerLeftSpr.position, { x: 0 }, 'linear', () => (this.speakerLeftSpr = undefined));
             this.timer.tween(0.2, this.speakerLeftSpr, { alpha: 0 });
         }
-        this.timer.tween(0.5, this.dialogueBox, { y: main.height + this.dialogueBox!.height + 100, alpha: 0 }, 'out-cubic', () => {
-            this.dialogueBox?.kill();
-            this.dialogueBox = undefined;
-        });
+        if (this.dialogueBox) {
+            this.timer.tween(0.5, this.dialogueBox, { y: main.height + this.dialogueBox!.height + 100, alpha: 0 }, 'out-cubic', () => {
+                this.dialogueBox?.kill();
+                this.dialogueBox = undefined;
+            });
+        }
     }
 
     public nextEntry() {
         if (this.currentId.startsWith('scene')) {
             this.switchScene.emit(string.gsub(this.currentId, 'scene_', '')[0]);
+            return;
+        }
+
+        if (this.currentId.startsWith('break')) {
+            this.stop();
             return;
         }
 
@@ -303,29 +328,35 @@ export class DialogueManager extends Basic {
 
             this.answeringQuestion = true;
 
-            this.currentEntry.options?.forEach((o, idx) => {
+            visibleOptions?.forEach((o, idx) => {
                 const y = startY + idx * (buttonHeight + spacing);
-                const btn = new OptionButton(o.text, () => {
-                    this.answeringQuestion = false;
-                    this.buttons = [];
-                    if (o.jumpTo) {
-                        this.stack.push({ id: this.currentId, line: this.currentLine + 1 });
-                        this.currentId = o.jumpTo.default;
-                        this.currentLine = 0;
-                        this.nextEntry();
-                    } else {
-                        this.stop();
-                    }
-                });
+                const btn = new OptionButton(
+                    o.text,
+                    () => {
+                        if (btn.wait) return;
+                        this.answeringQuestion = false;
+                        this.buttons = [];
+                        if (o.jumpTo) {
+                            this.stack.push({ id: this.currentId, line: this.currentLine + 1 });
+                            this.currentId = o.jumpTo.default;
+                            this.currentLine = 0;
+                            this.nextEntry();
+                        } else {
+                            this.stop();
+                        }
+                    },
+                    main.width / 2,
+                    y,
+                );
 
-                btn.setPosition(main.width / 2, y);
+                // btn.setPosition(main.width / 2, y);
                 this.buttons.push(btn);
             });
             this.playEntry(this.currentEntry);
             return;
         }
 
-        if (this.currentEntry.conditions) print('OI: ', evaluateCondition(this.currentEntry.conditions, globalState));
+        // if (this.currentEntry.conditions) print('OI: ', evaluateCondition(this.currentEntry.conditions, globalState));
 
         if (this.currentEntry.conditions && !evaluateCondition(this.currentEntry.conditions, globalState)) {
             this.currentLine++;

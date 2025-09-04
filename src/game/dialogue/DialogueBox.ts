@@ -5,11 +5,13 @@ import { Images } from '../../bliss/util/Resources';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
 import { BACKGROUND_COLOR, capitalize, FOCUSED_COLOR, LINE_WIDTH, OUTLINE_COLOR, UNFOCUSED_COLOR } from '../theme/theme';
+import { parseDialogue } from './DialogueParser';
 
 export class DialogueBox extends Basic {
     public timer: Timer = Timer();
 
     _backgroundImage: Image;
+    _arrow: Image = Images.get('assets/images/ui/arrow.png');
     width: number;
     height: number;
 
@@ -23,9 +25,10 @@ export class DialogueBox extends Basic {
     font: Font;
     _text: string = '';
     _idx: number = 0;
-    speakerLeft?: string = 'Player';
-    speakerRight?: string = 'Brother';
-    currentSpeaker?: string = 'Brother';
+    speakerLeft?: string;
+    speakerRight?: string;
+    currentSpeaker?: string;
+    speed: number = 0.02;
 
     constructor(text: string) {
         super();
@@ -70,7 +73,7 @@ export class DialogueBox extends Basic {
 
     public typewriter(): void {
         this.timer.clear();
-        this.timer.every(0.03, () => {
+        this.timer.every(this.speed, () => {
             this._idx++;
             this._text = this.fullText.substring(0, this._idx);
             if (this._text.length >= this.fullText.length) {
@@ -158,6 +161,10 @@ export class DialogueBox extends Basic {
             rectangle('line', rx, yy, labelWidth, labelHeight, 25, 25);
             setLineWidth(1);
             love.graphics.print(this.speakerRight, rx + labelWidth / 2 - this.font.getWidth(this.speakerRight) / 2, yy + 1);
+        }
+
+        if (this.hasFinished()) {
+            draw(this._arrow, this.x + this.width / 2 - padding * 2, this.y - padding * 2 - spacing, 0, 1, 1, this._arrow.getWidth() / 2, this._arrow.getHeight() / 2);
         }
     }
 }

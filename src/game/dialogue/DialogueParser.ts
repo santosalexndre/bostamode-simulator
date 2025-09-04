@@ -174,14 +174,38 @@ const parseSpeakers = (s: string | undefined) => {
 
 export const parseConditions = (s: string | undefined) => {
     if (s === undefined) return;
+
+    // 1) Condition at start of line
+    let [cond] = string.match(s, '^%s*!%s*(.-)%s*!');
+    if (cond) return cond;
+
+    // 2) Condition before '->'
     const [beforeGoto] = string.match(s, '^(.-)%-%>');
     if (beforeGoto) {
-        const [condition] = string.match(beforeGoto, '!(.-)!');
-        return condition;
-    } else {
-        return string.match(s, '!(.-)!')[0];
+        [cond] = string.match(beforeGoto, '!(.-)!');
+        if (cond) return cond;
     }
+
+    // 3) Condition before ':'
+    const [beforeColon] = string.match(s, '^(.-):');
+    if (beforeColon) {
+        [cond] = string.match(beforeColon, '!(.-)!');
+        if (cond) return cond;
+    }
+
+    return undefined;
 };
+
+// export const parseConditions = (s: string | undefined) => {
+//     if (s === undefined) return;
+//     const [beforeGoto] = string.match(s, '^(.-)%-%>');
+//     if (beforeGoto) {
+//         const [condition] = string.match(beforeGoto, '!(.-)!');
+//         return condition;
+//     } else {
+//         return string.match(s, '!(.-)!')[0];
+//     }
+// };
 
 const parseLine = (line: string) => {};
 
@@ -260,6 +284,7 @@ export const parseDialogue = (filePath: string): DialogueScript => {
                 const speakers = parseSpeakers(line);
                 const text = parseText(line);
                 const [buttonText] = string.match(line, '%[(.-)%]');
+                trace(condition);
 
                 if (line.startsWith('<question>')) {
                     handleQuestionStart(speakers, text!, condition, effects);

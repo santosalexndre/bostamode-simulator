@@ -23,7 +23,7 @@ export class ClickableObject extends ClickableSprite {
     }
 
     public activate() {
-        if (!this.hovered) {
+        if (!this.overlaps(main.mouse.x, main.mouse.y, 3, 3)) {
             this.activated = true;
         }
     }
@@ -32,7 +32,7 @@ export class ClickableObject extends ClickableSprite {
         super(Images.get(spritePath), x, y);
 
         this.onMouseEnter.connect(() => {
-            if (this.activated) this.whiteFactor = 0.3;
+            if (this.activated) this.whiteFactor = 0.7;
         });
         this.onMouseLeave.connect(() => {
             if (!this.activated) {
@@ -51,7 +51,9 @@ export class ClickableObject extends ClickableSprite {
     override render(): void {
         setShader(this.shader);
         this.shader.send('WhiteFactor', this.activated ? this.whiteFactor : 0);
+        this.shader.send('texture_size', [this.w, this.h]);
         super.render();
+        setShader();
         love.graphics.print(tostring(this.activated), this.x, this.y - 60);
     }
 }

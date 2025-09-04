@@ -26,6 +26,8 @@ export class Index extends Engine {
         // const boymoder = SpriteSheets.load()
         // Animations.load('girl/idle', )
 
+        Fonts.load('comicsans', 'assets/fonts/comicneue.ttf', 28);
+
         const girlPng = SpriteSheets.load('assets/images/player/player.png', 90, 200);
         Animations.load('girl/idle', girlPng, [0], 3, true);
         Animations.load('girl/hide', girlPng, [1], 3, true);

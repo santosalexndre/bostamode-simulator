@@ -51,60 +51,70 @@ export class Scene extends Group implements IScene {
 
         this.manager = new DialogueManager();
 
-        if (data.start) this.manager.loadScript(data.start);
+        this.manager.dialogueStarted.connect(() => {
+            this.deactivateObjects();
+        });
+        this.manager.dialogueEnded.connect(() => {
+            this.activateObjects();
+        });
 
         this.manager.switchScene.connect(s => {
             this.switchRequest.emit(s);
         });
 
-        // if (data.objects) {
-        //     for (const obj of data.objects) {
-        //         const instance = new ClickableObject(obj.sprite, obj.position[0], obj.position[1]);
+        if (data.objects) {
+            for (const obj of data.objects) {
+                const instance = new ClickableObject(obj.sprite, obj.position[0], obj.position[1]);
+                instance.x += instance.w / 2;
+                instance.y += instance.h / 2;
 
-        //         instance.type = obj.id.startsWith('npc') ? 'npc' : 'object';
-        //         instance.onButtonReleased.connect(() => {
-        //             if (!instance['activated']) return;
+                instance.type = obj.id.startsWith('npc') ? 'npc' : 'object';
+                instance.onButtonReleased.connect(() => {
+                    if (!instance['activated']) return;
 
-        //             if (instance.type == 'npc') {
-        //                 instance.visible = false;
-        //                 // instance.active = false;
-        //             }
+                    if (instance.type == 'npc') {
+                        instance.visible = false;
+                    }
 
-        //             const diag = this.addDialogue(obj.dialogue);
-        //             diag?.dialogueClosed.connect(() => {
-        //                 if (instance.type == 'npc') instance.visible = true;
-        //                 // instance.active = true;
-        //             });
-        //         });
-        //         this.objects.add(instance);
-        //     }
-        // }
+                    if (obj.dialogue) this.manager.loadScript(obj.dialogue);
 
+                    this.manager.dialogueEnded.connect(() => {
+                        if (instance.type == 'npc') instance.visible = true;
+                    });
+                });
+                this.objects.add(instance);
+            }
+        }
+
+        if (data.start) this.manager.loadScript(data.start);
         // if (data.start.length > 0) {
         //     this.addDialogue(data.start);
         // }
         handleEffects(data.effects, this.timer);
     }
 
-    addDialogue(data: DialogueEntry[]): Dialogue | undefined {
-        if (this.currentDialogue === undefined || this.currentDialogue.dead) {
-            globalState.set('State: playerInDialogue', true);
-            this.currentDialogue = this.dialogueGroup.add(new Dialogue(data));
-            this.currentDialogue.dialogueSwitch.connect(s => {
-                this.switchRequest.emit(s);
-            });
-            this.currentDialogue.start();
+    // addDialogue(data: DialogueEntry[]): Dialogue | undefined {
+    // if (this.currentDialogue === undefined || this.currentDialogue.dead) {
+    //     globalState.set('State: playerInDialogue', true);
+    //     this.currentDialogue = this.dialogueGroup.add(new Dialogue(data));
+    //     this.currentDialogue.dialogueSwitch.connect(s => {
+    //         this.switchRequest.emit(s);
+    //     });
+    //     this.currentDialogue.start();
+    //     this.currentDialogue.dialogueClosed.connect(() => {
+    //     });
+    //     return this.currentDialogue;
+    // }
+    // }
 
-            this.objects.forEach(m => (m.active = false));
-            // Turn off all objects so the player cant click again
-            this.objects.forEach(m => m.deactivate());
+    deactivateObjects() {
+        this.objects.forEach(m => (m.active = false));
+        this.objects.forEach(m => m.deactivate());
+    }
 
-            this.currentDialogue.dialogueClosed.connect(() => {
-                this.objects.forEach(m => m.activate());
-                this.objects.forEach(m => (m.active = true));
-            });
-            return this.currentDialogue;
-        }
+    activateObjects() {
+        this.objects.forEach(m => m.activate());
+        this.objects.forEach(m => (m.active = true));
     }
 
     public override update(dt: number): void {

@@ -1,19 +1,19 @@
 {
     "background": "assets/images/bedroom1.png",
-    "music": "assets/music/dokidoki.ogg",
-    "start": "injections.dsl",
+    "music": "assets/music/Idle Chatter.ogg",
+    "start": "brother1.dsl",
     "objects": [
         {
-            "id": "object:exit_door",
-            "sprite": "assets/images/twinkpad.png",
+            "id": "exit_door",
+            "sprite": "assets/images/objects/porta-0-158.png",
             "position": [
-                10,
-                100
+                0,
+                237
             ],
-            "dialogue": "bedroom_door.dsl"
+            "dialogue": "bedroom-door.dsl"
         },
         {
-            "id": "object:laptop",
+            "id": "laptop",
             "sprite": "assets/images/twinkpad.png",
             "position": [
                 319,
@@ -22,13 +22,13 @@
             "dialogue": "twinkpad.dsl"
         },
         {
-            "id": "object:phone",
+            "id": "phone",
             "sprite": "assets/images/twinkpad.png",
             "position": [
                 50,
                 50
             ],
-            "dialogue": "phone.dsl"
+            "dialogue": "injections.dsl"
         }
     ]
 }
