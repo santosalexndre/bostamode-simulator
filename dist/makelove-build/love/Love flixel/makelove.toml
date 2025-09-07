@@ -1,0 +1,16 @@
+name = "Love flixel"
+love_version = "11.3"
+default_targets = ["lovejs", "win32"]
+build_directory = "./makelove-build"
+icon_file = "assets/icon.png"
+
+[windows.exe_metadata]
+FileDescription = "Love flixel"
+FileVersion = "1.0"
+CompanyName = "SMEZZY"
+LegalCopyright = "Copyright © 2024 SMEZZYLIXO"
+ProductName = "love flixel"
+
+[lovejs]
+title = "Amazing Game"  # used on the resulting web page
+memory = "100000000"

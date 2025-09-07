@@ -9,7 +9,7 @@ export class SceneManager {
     public static switchScene(path: string) {
         this.currentScene = new Scene(path);
         this.currentScene.switchRequest.connect(newScene => {
-            this.currentScene = new Scene(newScene);
+            SceneManager.switchScene(newScene);
         });
     }
 }

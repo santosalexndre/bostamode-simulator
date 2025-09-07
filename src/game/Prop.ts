@@ -1,13 +1,13 @@
 import { circle, rectangle, setColor } from 'love.graphics';
 import { Sprite } from '../bliss/Sprite';
-import { Dialogue } from './Dialogue';
+// import { Dialogue } from './Dialogue';
 import { PlayState } from './PlayState';
 import { Signal } from '../bliss/util/Signal';
 
 type InteractMode = 'hide' | 'dialogue' | 'unknown';
 
 export class Prop extends Sprite {
-    public dialogue?: Dialogue;
+    // public dialogue?: Dialogue;
     public playerNearby: boolean = false;
 
     public interactMode: InteractMode;

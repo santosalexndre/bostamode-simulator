@@ -1,4 +1,3 @@
-import { Dialogue } from '../game/Dialogue';
 import * as bump from '../libraries/bump';
 import type { State } from './State';
 

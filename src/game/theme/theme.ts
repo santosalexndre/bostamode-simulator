@@ -24,6 +24,9 @@ export const spriteMap: Record<string, Record<string, string>> = {
     ['brother']: {
         default: 'assets/images/npcs/brother.png',
     },
+    ['uncle']: {
+        default: 'assets/images/npcs/uncle.png',
+    },
 };
 
 export const capitalize = <T extends string>(s: T) => (s[0].toUpperCase() + s.slice(1)) as Capitalize<typeof s>;

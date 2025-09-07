@@ -1,0 +1,33 @@
+{
+    "background": "assets/backgrounds/livingroom.png",
+    "music": "assets/music/Idle Chatter.ogg",
+    "objects": [
+        {
+            "id": "npc:brother1",
+            "sprite": "assets/images/objects/brother-mini.png",
+            "position": [
+                100,
+                200
+            ],
+            "dialogue": "brother1.dsl"
+        },
+        {
+            "id": "npc:brother3",
+            "sprite": "assets/images/objects/mom-dad.png",
+            "position": [
+                1200,
+                200
+            ],
+            "dialogue": "dadmom1.dsl"
+        },
+        {
+            "id": "npc:brother2",
+            "sprite": "assets/images/objects/door.png",
+            "position": [
+                800,
+                300
+            ],
+            "dialogue": "livingroomexit.dsl"
+        }
+    ]
+}

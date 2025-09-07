@@ -1,10 +1,6 @@
 
 --- ClerkDialogue.dsl
-#map
-(you) = {
-	exicted = 'assets/images/player/excited.png'
-}
-#endmap
+
 
 ((you)): Hi i'd like the dress please
 ((you), clerk): Which color

@@ -229,7 +229,7 @@ export const parseDialogue = (filePath: string): DialogueScript => {
     };
 
     const handleSection = (line: string) => {
-        [entryId] = string.gsub(line, '#', '');
+        entryId = string.gsub(line, '#', '')[0].trim();
     };
 
     const handleQuestionStart = (speakers: any, text: string, condition: any, effects: any) => {

@@ -1,0 +1,16 @@
+{
+    "background": "assets/images/backgrounds/grafica.png",
+    "music": "assets/music/Idle Chatter.ogg",
+    "start": "shop1.dsl",
+    "objects": [
+        {
+            "id": "cu",
+            "sprite": "assets/images/objects/ryan.png",
+            "position": [
+                900,
+                100
+            ],
+            "dialogue": "beforeRyan.dsl"
+        }
+    ]
+}

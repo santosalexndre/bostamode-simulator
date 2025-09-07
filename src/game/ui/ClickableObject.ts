@@ -17,6 +17,7 @@ export class ClickableObject extends ClickableSprite {
     public shader: Shader = love.graphics.newShader('assets/shaders/flash.frag');
 
     private activated: boolean = true;
+    public turnoff: boolean = false;
 
     public deactivate() {
         this.activated = false;
@@ -28,12 +29,17 @@ export class ClickableObject extends ClickableSprite {
         }
     }
 
+    public canClick(): boolean {
+        return this.activated && !this.turnoff;
+    }
+
     constructor(spritePath: string, x: number, y: number) {
         super(Images.get(spritePath), x, y);
 
         this.onMouseEnter.connect(() => {
-            if (this.activated) this.whiteFactor = 0.7;
+            if (this.canClick()) this.whiteFactor = 0.7;
         });
+
         this.onMouseLeave.connect(() => {
             if (!this.activated) {
                 this.activated = true;
@@ -50,10 +56,10 @@ export class ClickableObject extends ClickableSprite {
 
     override render(): void {
         setShader(this.shader);
-        this.shader.send('WhiteFactor', this.activated ? this.whiteFactor : 0);
+        this.shader.send('WhiteFactor', this.canClick() ? this.whiteFactor : 0);
         this.shader.send('texture_size', [this.w, this.h]);
         super.render();
         setShader();
-        love.graphics.print(tostring(this.activated), this.x, this.y - 60);
+        // love.graphics.print(tostring(this.activated), this.x, this.y - 60);
     }
 }

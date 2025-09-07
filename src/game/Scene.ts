@@ -4,7 +4,7 @@ import { main } from '../bliss/Main';
 import { Images } from '../bliss/util/Resources';
 import { decode } from '../libraries/json/json';
 import { Source } from 'love.audio';
-import { Dialogue } from './Dialogue';
+// import { Dialogue } from './Dialogue';
 import { DialogueEntry, IScene, SceneData } from './dialoguetypes';
 import { Sprite } from '../bliss/Sprite';
 import { UiElement } from '../bliss/ui/UiElement';
@@ -24,12 +24,12 @@ export class Scene extends Group implements IScene {
 
     switchRequest: Signal<string> = new Signal();
 
-    currentDialogue?: Dialogue;
+    // currentDialogue?: Dialogue;
     dialogues: Record<string, DialogueEntry> = new LuaTable() as any;
 
     timer: Timer = Timer();
 
-    dialogueGroup: Group<Dialogue> = new Group();
+    // dialogueGroup: Group<Dialogue> = new Group();
     objects: Group<ClickableObject> = new Group();
 
     playerInDialogue: boolean = false;
@@ -37,6 +37,8 @@ export class Scene extends Group implements IScene {
     whiteShader: Shader = love.graphics.newShader('assets/shaders/flash.frag');
 
     manager: DialogueManager;
+
+    coisa: ClickableObject[] = [];
 
     constructor(path: string) {
         super();
@@ -47,7 +49,7 @@ export class Scene extends Group implements IScene {
 
         if (data.music !== undefined) MusicManager.playMusic(data.music);
 
-        this.background = Images.get(data.background);
+        if (data.background) this.background = Images.get(data.background);
 
         this.manager = new DialogueManager();
 
@@ -69,8 +71,9 @@ export class Scene extends Group implements IScene {
                 instance.y += instance.h / 2;
 
                 instance.type = obj.id.startsWith('npc') ? 'npc' : 'object';
+                instance.deactivate();
                 instance.onButtonReleased.connect(() => {
-                    if (!instance['activated']) return;
+                    if (!instance.canClick()) return;
 
                     if (instance.type == 'npc') {
                         instance.visible = false;
@@ -120,26 +123,37 @@ export class Scene extends Group implements IScene {
     public override update(dt: number): void {
         super.update(dt);
         this.timer.update(dt);
+        this.objects.forEach(o => (o['turnoff'] = false));
+
+        const hovered = this.objects['members'].filter(o => o.hovered);
+
+        for (let i = 0; i < hovered.length - 1; i++) {
+            const obj = hovered[i];
+            obj.turnoff = true;
+            // obj['activated'] = false;
+        }
+
         this.objects.update(dt);
         love.graphics.setShader();
         this.manager.update(dt);
 
-        this.dialogueGroup.update(dt);
+        // this.dialogueGroup.update(dt);
     }
 
     public override render(): void {
-        const scale = main.camera.viewport.getScreenScale();
-        const [w, h] = this.background.getDimensions();
-        const sw = w / main.width;
-        const sh = h / main.height;
         push();
-
-        draw(this.background, 0, 0, 0, 1 / sw, 1 / sh);
+        if (this.background) {
+            const scale = main.camera.viewport.getScreenScale();
+            const [w, h] = this.background.getDimensions();
+            const sw = w / main.width;
+            const sh = h / main.height;
+            draw(this.background, 0, 0, 0, 1 / sw, 1 / sh);
+        }
         super.render();
         this.objects.render();
         this.manager.render();
         // main.camera.detach();
-        this.dialogueGroup.render();
+        // this.dialogueGroup.render();
         pop();
     }
 }

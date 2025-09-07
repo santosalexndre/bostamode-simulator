@@ -13,5 +13,3 @@ maybe even with the option to have multiple hitboxes then integrate this with as
 
 
 ## designs
-
-* Should the bump world variable really be flxg.world? idk, it wokrs so whatver for now

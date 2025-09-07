@@ -2,7 +2,7 @@ import { Group } from '../bliss/group/Group';
 import { main } from '../bliss/Main';
 import { State } from '../bliss/State';
 import { Player } from './Player';
-import { Dialogue } from './Dialogue';
+// import { Dialogue } from './Dialogue';
 import { Prop } from './Prop';
 import { input } from '../bliss/Input';
 import { Npc } from './Npc';

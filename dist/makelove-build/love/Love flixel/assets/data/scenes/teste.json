@@ -1,0 +1,187 @@
+
+{
+    "background": "assets/images/bedroom1.png",
+    "music": "assets/music/dokidoki.ogg",
+    "start": "intro.dsl",
+    "objects": [
+        {
+            "id": "object:exit_door",
+            "sprite": "assets/images/twinkpad.png",
+            "hitbox": [
+                0,
+                0,
+                64,
+                64
+            ],
+            "position": [
+                10,
+                100
+            ],
+            "dialogue": [
+                {
+                    "id": "exit_sucess",
+                    "goto": "bedroomChecked == true -> scene:living-room1; bedroomChecked == false -> exit_fail"
+                },
+                {
+                    "id": "exit_fail",
+                    "speaker": "(You)",
+                    "type": "lines",
+                    "content": [
+                        "I can't leave just yet, i have to check on my wardrobe."
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "object:laptop",
+            "sprite": "assets/images/twinkpad.png",
+            "hitbox": [
+                0,
+                0,
+                72,
+                64
+            ],
+            "position": [
+                319,
+                128
+            ],
+            "interactable": true,
+            "dialogue": [
+                {
+                    "id": "laptop01",
+                    "speaker": "(You)",
+                    "type": "lines",
+                    "content": [
+                        "No way im browsing 4chan again!!"
+                    ],
+                    "effects": [
+                        {
+                            "set": {
+                                "bedroomChecked": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "object:phone",
+            "sprite": "assets/images/twinkpad.png",
+            "hitbox": [
+                0,
+                0,
+                64,
+                64
+            ],
+            "position": [
+                50,
+                50
+            ],
+            "interactable": true,
+            "dialogue": [
+                {
+                    "id": "phone01",
+                    "type": "choice",
+                    "question": "I need a drive, who should I call?",
+                    "options": [
+                        {
+                            "text": "Brother",
+                            "goto": "brother01",
+                            "condition": "bedroomChecked == true"
+                        },
+                        {
+                            "text": "Laura",
+                            "goto": "laura01"
+                        },
+                        {
+                            "text": "Mom",
+                            "goto": "mom01"
+                        },
+                        {
+                            "text": "Marcia",
+                            "goto": "marcia01"
+                        },
+                        {
+                            "text": "Ryan Gosling",
+                            "goto": "ryan01"
+                        },
+                        {
+                            "text": "Nevermind"
+                        }
+                    ]
+                },
+                {
+                    "id": "mom01",
+                    "speaker": "Mom",
+                    "type": "lines",
+                    "content": [
+                        "To ocupada valeu."
+                    ],
+                    "goto": "thought01"
+                },
+                {
+                    "id": "laura01",
+                    "speaker": "Laura",
+                    "type": "lines",
+                    "content": [
+                        "eu nao tenho carro sua puta"
+                    ],
+                    "effects": {
+                        "set": {
+                            "rideAccepted": true
+                        }
+                    },
+                    "goto": "thought01"
+                },
+                {
+                    "id": "marcia01",
+                    "speaker": "Marcia",
+                    "type": "lines",
+                    "content": [
+                        "Vai se fuder mlk viado!"
+                    ],
+                    "goto": "thought01"
+                },
+                {
+                    "id": "ryan01",
+                    "speaker": "(You)",
+                    "type": "lines",
+                    "content": [
+                        "Ohh that's right, he gave me this phone number a while back when we accidentally met, I think should try it.",
+                        "Hello, Ryan?"
+                    ],
+                    "goto": "ryan02"
+                },
+                {
+                    "id": "ryan02",
+                    "speaker": "Ryan Gosling",
+                    "type": "lines",
+                    "content": [
+                        "Anything happens in that five minutes and i'm yours, no matter what.",
+                        "Anything on either side of that minute and you are on your own.",
+                        "I don't sit while you're running it down",
+                        "I don't carry a gun.",
+                        "I drive"
+                    ],
+                    "goto": "scene:ryan"
+                },
+                {
+                    "id": "thought01",
+                    "type": "lines",
+                    "content": [
+                        "Hmm, thats too bad. Guess i'll call someone else"
+                    ],
+                    "goto": "phone01"
+                },
+                {
+                    "id": "thought02",
+                    "type": "lines",
+                    "content": [
+                        "hell yeah lets fucking go!"
+                    ],
+                    "goto": "scene:leave01"
+                }
+            ]
+        }
+    ]
+}

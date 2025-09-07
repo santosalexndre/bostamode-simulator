@@ -1,0 +1,16 @@
+{
+    "id": "ryanGosling",
+    "background": "assets/images/ryanscene.png",
+    "effects": [
+        {
+            "shake": [
+                3.5,
+                1.659340659,
+                20,
+                "y"
+            ]
+        }
+    ],
+    "music": "assets/music/ryan.mp3",
+    "start": "ryan.dsl"
+}

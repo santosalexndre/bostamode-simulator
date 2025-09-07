@@ -11,6 +11,7 @@ import { Button } from '../bliss/ui/Button';
 import { PlayState } from './PlayState';
 import { TimerHandle } from '../bliss/interfaces';
 import { WorldMap } from './WorldMap';
+import { SceneManager } from './SceneManager';
 
 export class MenuState extends State {
     private camera: Camera = new Camera(main.width, main.height);
@@ -24,7 +25,10 @@ export class MenuState extends State {
         this.main.add(label);
 
         for (let y = 0; y < 1; y++) {
-            const button = new Button('play', () => main.switchState(WorldMap));
+            const button = new Button('play', () => {
+                main.switchState(PlayState);
+                SceneManager.switchScene('bedroom1');
+            });
             button.anchor(0.5, 0.5);
             button.label.anchor(0.5, 0.5);
             button.setSize(100, 10);

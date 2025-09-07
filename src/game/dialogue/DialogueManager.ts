@@ -7,13 +7,15 @@ import { globalState } from '../global';
 import { DialogueBox } from './DialogueBox';
 import { OptionButton } from '../ui/OptionButton';
 import { main } from '../../bliss/Main';
-import { draw, origin, points, pop, push, scale, translate } from 'love.graphics';
+import { draw, Image, origin, points, pop, push, rectangle, scale, setColor, translate } from 'love.graphics';
 import { capitalize, getSprite, spriteMap } from '../theme/theme';
 import vec from '../../libraries/nvec';
 import * as Timer from '../../libraries/timer';
 import { Color } from '../../bliss/util/Color';
 import { Signal } from '../../bliss/util/Signal';
 import { trace } from '../../libraries/inspect';
+import { Images } from '../../bliss/util/Resources';
+import { MusicManager } from '../MusicManager';
 
 export class DialogueManager extends Basic {
     fullScript: DialogueScript;
@@ -38,6 +40,7 @@ export class DialogueManager extends Basic {
     dialogueStarted: Signal<void> = new Signal();
 
     timer: Timer = Timer();
+    overlay?: { type: string; color: Color | undefined; image: Image | undefined };
 
     constructor() {
         super();
@@ -71,7 +74,6 @@ export class DialogueManager extends Basic {
         if (!effects) return;
 
         for (const eff of effects) {
-            trace(eff);
             switch (eff.name) {
                 case 'set': {
                     // Example: "confidence -=1"
@@ -101,6 +103,27 @@ export class DialogueManager extends Basic {
                 case 'shake':
                     // Example: "STRONG y"
                     print(`Shake screen with args: ${eff.args}`);
+                    break;
+                case 'overlay':
+                    if (eff.args == 'nil') {
+                        this.overlay = undefined;
+                        break;
+                    }
+                    const type = eff.args.startsWith('#') ? 'color' : 'image';
+                    const color = type === 'color' ? Color.fromHex(eff.args) : undefined;
+                    const image = type === 'image' ? Images.get(eff.args) : undefined;
+
+                    this.overlay = {
+                        type,
+                        color,
+                        image,
+                    };
+                    break;
+                case 'music':
+                    MusicManager.playMusic(eff.args.trim());
+                    break;
+                case 'sound':
+                    MusicManager.playSound(eff.args.trim());
                     break;
             }
         }
@@ -412,6 +435,17 @@ export class DialogueManager extends Basic {
 
         if (this.speakerLeftSpr !== undefined) {
             this.speakerLeftSpr.render();
+        }
+
+        if (this.overlay) {
+            if (this.overlay.type == 'color') {
+                setColor(this.overlay.color!);
+                rectangle('fill', 0, 0, main.width, main.height);
+                setColor(1, 1, 1);
+            }
+            if (this.overlay.type == 'image') {
+                draw(this.overlay.image!, 0, 0);
+            }
         }
 
         this.buttons.forEach(b => b.render());

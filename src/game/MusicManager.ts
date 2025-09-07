@@ -25,4 +25,17 @@ export class MusicManager {
         this.music = song;
         this.currentSong = path;
     }
+
+    public static playSound(path: string) {
+        let song = this.cache[path];
+
+        if (song == undefined) {
+            song = love.audio.newSource(path, 'static');
+            this.cache[path] = song;
+        }
+
+        song.setVolume(1);
+        song.setLooping(false);
+        song.play();
+    }
 }

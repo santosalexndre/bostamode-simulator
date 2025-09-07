@@ -121,7 +121,7 @@ export class DialogueBox extends Basic {
             if (remaining <= 0) break;
 
             const toDraw = line.substring(0, remaining);
-            love.graphics.print(toDraw, this.x - this.width / 2 + padding + 10, y + padding + marginTop);
+            love.graphics.print(toDraw, this.x - this.width / 2 + padding, y + padding + marginTop);
 
             remaining -= line.length;
             y += this.font.getHeight();
