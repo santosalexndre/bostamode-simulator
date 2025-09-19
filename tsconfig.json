@@ -19,6 +19,8 @@
         "luaTarget": "JIT",
         "noHeader": true,
         "sourceMapTraceback": false,
+        "luaBundle": "main.lua",
+        "luaBundleEntry": "src/main.ts",
         "noResolvePaths": ["lldebugger", "ffi"]
     }
 }
